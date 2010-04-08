@@ -1,0 +1,154 @@
+<?php
+/*
+ * $Id: $
+ */
+
+/*
+ * $file
+ *
+ * Run through tests of the Fedora API funcitons.
+ */
+class FedoraAPITestCase extends DrupalWebTestCase {
+
+  public static function getInfo() {
+    return array(
+      'name' => 'Fedora api',
+      'description' => t('The fedora repository API tests'),
+      'group' => t('fedora repository'),
+    );
+  }
+
+  function setUp() {
+    parent::setUp('fedora_api');
+
+    //module_load_include('php', 'fedora_repository', 'api/fedora_item');
+
+    // Create and login user.
+    $repository_user = $this->drupalCreateUser();
+
+
+    $this->drupalLogin($repository_user);
+
+ }
+
+  public function testAPIA() {
+    module_load_include('php', 'fedora_api');
+    global $base_url;
+    
+    $profile = getObjectProfile('islandora:demos');
+
+    if (empty($profile->error)) {
+      $this->pass('Fedora API-A getObjectProfile passed.');
+    }
+    $dslist = listDatastreams('islandora:demos');
+    if (empty($dslist->error)) {
+      $this->pass('Fedora API-A listDatastreams passed.');
+    }
+    $methodlist = listMethods('islandora:demos');
+    if (empty($methodlist->error)) {
+      $this->pass('Fedora API-A listMethods passed.');
+    }
+
+    $find_results = findObjects("*islandora*", "" );
+    if (empty($find_results->error)) {
+      $this->pass('Fedora API-A findObjects passed.');
+    }
+    $dc_stream = getDatastreamDissemination("fedora-system:FedoraObject-3.0", "DC", '', 'false');
+    if (empty($dc_stream->error)) {
+      if (strpos($dc_stream->data, '<oai_dc:dc') >= 0) {
+        $this->pass('Fedora API-A getDatastreamDissemination passed.');
+      }
+      else {
+        $this->fail("Failed to retrieve DC datastream for fedora-system:FedoraObject-3.0. Instead got: ".$dc_stream);
+      }
+    }
+    else {
+      $this->fail("Error calling drupal_http_request. Check Watdhdog for details.");
+    }
+
+    $dc_html = getDissemination('fedora-system:FedoraObject-3.0', 'fedora-system:3', 'viewDublinCore');
+    if (empty($dc_html->error)) {
+      if (strpos($dc_html->data, 'Dublin Core View') >= 0) {
+        $this->pass('Fedora API-A getDissemination passed.');
+      }
+      else {
+        $this->fail("Failed to retrieve viewDublinCore Disseminator for fedora-system:FedoraObject-3.0. Instead got: ".$dc_html);
+      }
+    }
+    else {
+      $this->fail("Error calling drupal_http_request for getDissemination: $dc_html->error");
+    }
+
+    $obj_hist = getObjectHistory('fedora-system:FedoraObject-3.0');
+    if (empty($obj_hist->error)) {
+      if (strpos($obj_hist->data, 'fedoraObjectHistory') >= 0) {
+        $this->pass('Fedora API-A getObjectHistory passed.');
+      }
+      else {
+        $this->fail("Failed to retrieve object history for fedora-system:FedoraObject-3.0. Instead got: ".$obj_hist);
+      }
+    }
+    else {
+      $this->fail("Error calling drupal_http_request for getObjectHistory: $obj_hist->error");
+    }
+
+    $testDSID = $this->randomName(11);
+
+    $data = addDatastream('fedora-system:FedoraObject-3.0', $testDSID, 'M', '', '', $base_url.'/themes/garland/logo.png', '', 'hipig', 'A', '', '', '', 'image/png');
+
+    if ($data->code == 201) {
+      $this->pass('Add managed datastream test successful: '.$data->error);
+    }
+    else {
+      $this->fail('Problem running testaddDatastream: '.$data->error);
+    }
+
+    $test_file_DSID = $this->randomName(11);
+    $file_add_data = addDatastream('fedora-system:FedoraObject-3.0', $test_file_DSID, 'M', getcwd().'/themes/garland/logo.png', '', '', '', 'hipig', 'A', '', '', '', 'image/png');
+    if ($file_add_data->code == 201) {
+      $this->pass('Add managed datastream from file test successful: '.$file_add_data->error);
+    }
+    else {
+      $this->fail('Problem running testaddDatastream for file: '.$file_add_data->error);
+    }
+
+    $test_export = fedora_export('fedora-system:FedoraObject-3.0');
+    if (empty($test_export->error)) {
+      if (strpos($test_export->data, 'foxml:digitalObject') >= 0) {
+        $this->pass("Successfully exported FOXML.");
+      }
+      else {
+        $this->fail('Problem running export command, got: '.$test_export->data);
+      }
+    }
+    else {
+      $this->fail('Problem executing drupal_http_request for fedora_export: '.$test_export->error);
+    }
+
+    $test_nextPID = getNextPID();
+    if (empty($test_nextPID->error)) {
+      if (strpos($test_nextPID->data, 'pidlist') >= 0) {
+        $this->pass('Successfully called getNextPID.');
+      }
+      else {
+        $this->fail('Problem calling getNextPID: '.$test_nextPID->data);
+      }
+    }
+    else {
+      $this->fail('Problem executing drupal_http_request for getNextPID: '.$test_nextPID->error);
+    }
+
+    $test_objectXML = getObjectXML('fedora-system:FedoraObject-3.0');
+    if (empty($test_objectXML->error)) {
+      if (strpos($test_objectXML->data, 'foxml:digitalObject') >= 0) {
+        $this->pass('Successfully called getObjectXML.');
+      }
+      else {
+        $this->fail('Problem calling getObjectXML. Got: '.$test_objectXML->data);
+      }
+    }
+    else {
+      $this->fail('Problem calling drupal_http_request: '.$test_objectXML->error);
+    }
+  }
+}
