@@ -15,20 +15,20 @@ function fedora_api_perm() {
 
 function fedora_api_menu() {
   $items = array();
-  $items['admin/settings/fedora_repository'] = array (
+  $items['admin/settings/fedora_repository/server'] = array (
     'title' => t('Fedora Server Settings'),
     'description' => t('Enter the Fedora Collection information here'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('fedora_api_settings'),
     'access arguments' => array('administer site configuration'),
-    'type' => MENU_NORMAL_ITEM,
+    'type' => MENU_NORMAL_TASK,
   );
   $items['admin/settings/fedora_repository/server'] = array(
     'title' => 'Fedora Server Settings',
     'description' => 'Configure Fedora Repository API server',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('fedora_api_settings'),
-    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'type' => MENU_LOCAL_TASK,
     'weight' => 0,
     'access arguments' => array('administer fedora api'),
   );
