@@ -63,7 +63,7 @@ class FedoraAPITestCase extends DrupalWebTestCase {
       }
     }
     else {
-      $this->fail("Error calling drupal_http_request. Check Watdhdog for details.");
+      $this->fail("Error calling drupal_http_request. ".$dc_stream->error);
     }
 
     $dc_html = getDissemination('fedora-system:FedoraObject-3.0', 'fedora-system:3', 'viewDublinCore');

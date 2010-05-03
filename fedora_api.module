@@ -41,19 +41,19 @@ function fedora_api_menu() {
  */
 function fedora_api_settings() {
   $form = array();
-  $form['fedora_base_url'] = array (
+  $form['fedora_server_url'] = array (
     '#type' => 'textfield',
     '#title' => t('Fedora server URL'),
-    '#default_value' => variable_get('fedora_base_url', 'http://localhost:8080/fedora'),
+    '#default_value' => variable_get('fedora_server_url', 'http://localhost:8080/fedora'),
     '#description' => t('The Fedora server URL'),
     '#required' => TRUE,
     '#weight' => -10,
   );
   $form['fedora_user'] = array(
     '#type' => 'textfield',
-    '#title' => 'Feodra User',
+    '#title' => 'Fedora User',
     '#default_value' => variable_get('fedora_user', 'fedoraAdmin'),
-    '#description' => t('The username to use when ocnnecting to the Fedora server.'),
+    '#description' => t('The username to use when connecting to the Fedora server. Only set this if you wish to bypass the Fedora Drupal Servlet Filter'),
     '#required' => FALSE,
     '#weight' => -9,
   );
@@ -98,7 +98,8 @@ function fedora_api_settings() {
  * </result>
  */
 function findObjects($terms = '', $query = '', $maxResults = '', $resultFormat = 'xml', $displayFields = array('pid', 'title')) {
-  $request = variable_get('fedora_base_url', 'http://localhost:8080/fedora')."/objects?";
+  $fedora_url = _insert_credentials_into_url();
+  $request = "$fedora_url/objects?";
 
   if (!empty($terms)) {
     $request .= "terms=".drupal_urlencode($terms);
@@ -128,10 +129,8 @@ function findObjects($terms = '', $query = '', $maxResults = '', $resultFormat =
  */
 function getDatastreamDissemination($pid, $dsID, $asOfDateTime = '', $download = '') {
   $pid = drupal_urlencode($pid);
-  $fedora_user = variable_get('fedora_user', 'fedoraAdmin');
-  $fedora_pass = variable_get('fedora_password', 'fedoraAdmin');
-  $fedora_uri = _insert_credentials_into_url(variable_get('fedora_base_url', 'http://localhost:8080/fedora'), variable_get('fedora_user', 'fedoraAdmin'), variable_get('fedora_password', 'fedoraAdmin'));
-  $request = "$fedora_uri/objects/$pid/datastreams/$dsID/content";
+  $fedora_url = _insert_credentials_into_url();
+  $request = "$fedora_url/objects/$pid/datastreams/$dsID/content";
   $request .= (!empty($asOfDateTime) ? "&asOfDateTime=$asOfDateTime" : '');
   if (!empty($download)) {
     $request .= (!empty($asOfDateTime) ? '&' : '?');
@@ -157,10 +156,8 @@ function getDissemination($pid, $sdefPid, $method, $methodParameters = array()) 
   $pid = drupal_urlencode($pid);
   $sdefPid = drupal_urlencode($sdefPid);
   
-  $fedora_user = variable_get('fedora_user', 'fedoraAdmin');
-  $fedora_pass = variable_get('fedora_password', 'fedoraAdmin');
-  $fedora_uri = _insert_credentials_into_url(variable_get('fedora_base_url', 'http://localhost:8080/fedora'), variable_get('fedora_user', 'fedoraAdmin'), variable_get('fedora_password', 'fedoraAdmin'));
-  $request = "$fedora_uri/objects/$pid/methods/$sdefPid/$method?";
+  $fedora_url = _insert_credentials_into_url();
+  $request = "$fedora_url/objects/$pid/methods/$sdefPid/$method?";
   
   //$request .= (!empty($asOfDateTime) ? "&asOfDateTime=$asOfDateTime" : '');
   foreach($methodParameters as $param_name => $param_value) {
@@ -186,8 +183,11 @@ function getDissemination($pid, $sdefPid, $method, $methodParameters = array()) 
  */
 function getObjectHistory($pid, $format = 'xml') {
   $pid = drupal_urlencode($pid);
-  $request = variable_get('fedora_base_url', 'http://localhost:8080/fedora')."/objects/$pid/versions?format=$format";
+  $fedora_url = _insert_credentials_into_url();
+
+  $request = "$fedora_url/objects/$pid/versions?format=$format";
   $response = drupal_http_request($request);
+
   if (!empty($response->error)) {
     watchdog('fedora api', 'Error executing Fedora REST request %request: %error', array('%request' => $request, '%error' => $response->error), 'error');
   }
@@ -218,7 +218,9 @@ function getObjectHistory($pid, $format = 'xml') {
  */
 function getObjectProfile($pid, $format = 'xml', $asOfDateTime = '') {
   $pid = drupal_urlencode($pid);
-  $request = variable_get('fedora_base_url', 'http://localhost:8080/fedora')."/objects/$pid?format=$format";
+  $fedora_url = _insert_credentials_into_url();
+
+  $request = "$fedora_url/objects/$pid?format=$format";
   $request .= (!empty($asOfDateTime) ? "&asOfDateTime=$asOfDateTime" : '');
   $response = drupal_http_request($request);
   if (!empty($response->error)) {
@@ -244,7 +246,9 @@ function getObjectProfile($pid, $format = 'xml', $asOfDateTime = '') {
  */
 function listDatastreams($pid, $format = 'xml', $asOfDateTime = '') {
   $pid = drupal_urlencode($pid);
-  $request = variable_get('fedora_base_url', 'http://localhost:8080/fedora')."/objects/$pid/datastreams?format=$format";
+  $fedora_url = _insert_credentials_into_url();
+
+  $request = "$fedora_url/objects/$pid/datastreams?format=$format";
   $request .= (!empty($asOfDateTime) ? "&asOfDateTime=$asOfDateTime" : '');
   $response = drupal_http_request($request);
   if (!empty($response->error)) {
@@ -273,7 +277,9 @@ function listDatastreams($pid, $format = 'xml', $asOfDateTime = '') {
  */
 function listMethods($pid, $sdefPid = '', $format = 'xml', $asOfDateTime = '') {
   $pid = drupal_urlencode($pid);
-  $request = variable_get('fedora_base_url', 'http://localhost:8080/fedora')."/objects/$pid/methods";
+  $fedora_url = _insert_credentials_into_url();
+
+  $request = "$fedora_url/objects/$pid/methods";
   $request .= (!empty($sdefPid) ? "/$sdefPid" : '');
   $request .= "?format=$format";
   $request .= (!empty($asOfDateTime) ? "&asOfDateTime=$asOfDateTime" : '');
@@ -331,8 +337,8 @@ function addDatastream($pid, $dsID, $controlGroup, $file_path = '', $ds_string =
     return NULL;
   }
   
-  $fedora_uri = _insert_credentials_into_url(variable_get('fedora_base_url', 'http://localhost:8080/fedora'), variable_get('fedora_user', 'fedoraAdmin'), variable_get('fedora_password', 'fedoraAdmin'));
-  $request = $fedora_uri."/objects/$pid/datastreams/$dsID?";
+  $fedora_url = _insert_credentials_into_url();
+  $request = $fedora_url."/objects/$pid/datastreams/$dsID?";
 
   $request .= (!empty($controlGroup) ? "controlGroup=$controlGroup&" : '')
            .(!empty($dsLocation) ? "dsLocation=$dsLocation&" : '')
@@ -363,8 +369,8 @@ function fedora_export($pid, $format = 'info:fedora/fedora-system:FOXML-1.1', $c
   $pid = drupal_urlencode($pid);
   $format = drupal_urlencode($format);
   
-  $fedora_uri = _insert_credentials_into_url(variable_get('fedora_base_url', 'http://localhost:8080/fedora'), variable_get('fedora_user', 'fedoraAdmin'), variable_get('fedora_password', 'fedoraAdmin'));
-  $request = $fedora_uri."/objects/$pid/export?";
+  $fedora_url = _insert_credentials_into_url();
+  $request = $fedora_url."/objects/$pid/export?";
 
   $request .= (!empty($format) ? "format=$format&" : '')
            .(!empty($context) ? "context=$context&" : '')
@@ -386,8 +392,8 @@ function fedora_export($pid, $format = 'info:fedora/fedora-system:FOXML-1.1', $c
  * </pidList>
  */
 function getNextPID($numPIDS = 1, $namespace = '', $format = 'xml') {
-  $fedora_uri = _insert_credentials_into_url(variable_get('fedora_base_url', 'http://localhost:8080/fedora'), variable_get('fedora_user', 'fedoraAdmin'), variable_get('fedora_password', 'fedoraAdmin'));
-  $request = $fedora_uri."/objects/nextPID?";
+  $fedora_url = _insert_credentials_into_url();
+  $request = $fedora_url."/objects/nextPID?";
   $request .= (!empty($numPIDS) ? "numPIDS=$numPIDS&" : '')
            .(!empty($namespace) ? "namespace=$namespace&" : '')
            .(!empty($format) ? "format=$format" : '');
@@ -402,8 +408,8 @@ function getNextPID($numPIDS = 1, $namespace = '', $format = 'xml') {
  */
 function getObjectXML($pid) {
   $pid = drupal_urlencode($pid);
-  $fedora_uri = _insert_credentials_into_url(variable_get('fedora_base_url', 'http://localhost:8080/fedora'), variable_get('fedora_user', 'fedoraAdmin'), variable_get('fedora_password', 'fedoraAdmin'));
-  $request = $fedora_uri."/objects/$pid/objectXML";
+  $fedora_url = _insert_credentials_into_url();
+  $request = $fedora_url."/objects/$pid/objectXML";
   $response = drupal_http_request($request);
   return $response;
 }
@@ -457,9 +463,9 @@ function ingest($foxml_file = '', $foxml_string = '', $pid = '', $new = TRUE, $l
     return NULL;
   }
 
-  $fedora_uri = _insert_credentials_into_url(variable_get('fedora_base_url', 'http://localhost:8080/fedora'), variable_get('fedora_user', 'fedoraAdmin'), variable_get('fedora_password', 'fedoraAdmin'));
+  $fedora_url = _insert_credentials_into_url();
 
-  $request = $fedora_uri."/objects/$pid?";
+  $request = $fedora_url."/objects/$pid?";
 
   $request .= (!empty($label) ? "label=$label&" : '')
            .(!empty($format) ? "format=$format&" : '')
@@ -529,9 +535,9 @@ function modifyDatastream($pid, $dsID, $file_path = '', $dsLocation = '', $altID
     $params = multipart_encode($boundary, array('file' => $file_path));
   }
 
-  $fedora_uri = _insert_credentials_into_url(variable_get('fedora_base_url', 'http://localhost:8080/fedora'), variable_get('fedora_user', 'fedoraAdmin'), variable_get('fedora_password', 'fedoraAdmin'));
+  $fedora_url = _insert_credentials_into_url();
 
-  $request = $fedora_uri."/objects/$pid/datastreams/$dsID?";
+  $request = $fedora_url."/objects/$pid/datastreams/$dsID?";
   $request .= (!empty($dsLocation) ? "dsLocation=$dsLocation&" : '')
            .(!empty($altIDs) ? "altIDs=$altIDs&" : '')
            .(!empty($dsLabel) ? "dsLabel=$dsLabel&" : '')
@@ -551,8 +557,8 @@ function modifyObject($pid, $label = '', $ownerId = '', $state = '', $logMessage
   $pid = drupal_urlencode($pid);
   $label = drupal_urlencode($label);
   $logMessage = drupal_urlencode($logMessage);
-  $fedora_uri = _insert_credentials_into_url(variable_get('fedora_base_url', 'http://localhost:8080/fedora'), variable_get('fedora_user', 'fedoraAdmin'), variable_get('fedora_password', 'fedoraAdmin'));
-  $request = $fedora_uri."/objects/$pid?";
+  $fedora_url = _insert_credentials_into_url();
+  $request = $fedora_url."/objects/$pid?";
   $request .= (!empty($label) ? "label=$label&" : '')
            .(!empty($ownerId) ? "ownerId=$ownerId&" : '')
            .(!empty($state) ? "state=$state" : '')
@@ -575,8 +581,8 @@ function modifyObject($pid, $label = '', $ownerId = '', $state = '', $logMessage
 function purgeDatastream($pid, $dsID, $startDT = '', $endDT = '', $logMessage = '', $force = 'false') {
   $pid = drupal_urlencode($pid);
   $logMessage = drupal_urlencode($logMessage);
-  $fedora_uri = _insert_credentials_into_url(variable_get('fedora_base_url', 'http://localhost:8080/fedora'), variable_get('fedora_user', 'fedoraAdmin'), variable_get('fedora_password', 'fedoraAdmin'));
-  $request = $fedora_uri."/objects/$pid/datastreams/$dsID?";
+  $fedora_url = _insert_credentials_into_url();
+  $request = $fedora_url."/objects/$pid/datastreams/$dsID?";
   $request .= (!empty($startDT) ? "startDT=$startDT&" : '')
            .(!empty($endDT) ? "endDT=$endDT&" : '')
            .(!empty($logMessage) ? "logMessage=$logMessage" : '')
@@ -596,8 +602,8 @@ function purgeDatastream($pid, $dsID, $startDT = '', $endDT = '', $logMessage = 
 function purgeObject($pid, $logMessage = '', $force = 'false') {
   $pid = drupal_urlencode($pid);
   $logMessage = drupal_urlencode($logMessage);
-  $fedora_uri = _insert_credentials_into_url(variable_get('fedora_base_url', 'http://localhost:8080/fedora'), variable_get('fedora_user', 'fedoraAdmin'), variable_get('fedora_password', 'fedoraAdmin'));
-  $request = $fedora_uri."/objects/$pid?";
+  $fedora_url = _insert_credentials_into_url();
+  $request = $fedora_url."/objects/$pid?";
   $request .= (!empty($logMessage) ? "logMessage=$logMessage" : '')
            .(!empty($force) ? "force=$force" : '');
   $response = drupal_http_request($request, array(), 'DELETE');
@@ -616,8 +622,27 @@ function purgeObject($pid, $logMessage = '', $force = 'false') {
  * @param String $pass
  * @return String
  */
-function _insert_credentials_into_url($url, $user, $pass) {
-  return (!empty($user) ? substr_replace($url, "$user".(!empty($pass) ? ":$pass@" : '@'), strpos($url, '://') + 3, 0) : $url);
+function _insert_credentials_into_url($fedora_url = '', $fedora_user = '', $fedora_pass = '') {
+  global $user;
+  if (empty($fedora_url)) {
+    $fedora_url = variable_get('fedora_server_url', 'http://localhost:8080/fedora');
+  }
+  if (empty($user)) {
+    $user_var = variable_get('fedora_user', '');
+    if (!empty($user_var)) {
+      $fedora_user = variable_get('fedora_user', '');
+      $fedora_pass = variable_get('fedora_password', '');
+    }
+    elseif ($user->uid == 0) {
+      $fedora_user = 'anonymous';
+      $fedora_pass = 'anonymous';
+    }
+    else {
+      $fedora_user = $user->name;
+      $fedora_pass = $user->pass;
+    }
+  }
+  return (!empty($fedora_user) ? substr_replace($fedora_url, "$fedora_user".(!empty($fedora_pass) ? ":$fedora_pass@" : '@'), strpos($fedora_url, '://') + 3, 0) : $fedora_url);
 }
 
 function multipart_encode($boundary, $params){
