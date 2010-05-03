@@ -24,8 +24,8 @@ class FedoraAPITestCase extends DrupalWebTestCase {
     //module_load_include('php', 'fedora_repository', 'api/fedora_item');
 
     // Create and login user.
-    $repository_user = $this->drupalCreateUser();
-
+    $repository_user = $this->drupalCreateFedoraUser();
+    $this->pass("Password: ".$repository_user->pass);
 
     $this->drupalLogin($repository_user);
 
@@ -151,4 +151,31 @@ class FedoraAPITestCase extends DrupalWebTestCase {
       $this->fail('Problem calling drupal_http_request: '.$test_objectXML->error);
     }
   }
+
+
+ protected function drupalCreateFedoraUser($permissions = array('access comments', 'access content', 'post comments', 'post comments without approval')) {
+   // Create a role with the given permission set.
+   if (!($rid = $this->drupalCreateRole($permissions))) {
+     return FALSE;
+   }
+
+   // Create a user assigned to that role.
+   $edit = array();
+   $edit['name']   = 'simpletestuser';
+   $edit['mail']   = $edit['name'] . '@example.com';
+   $edit['roles']  = array($rid => $rid);
+   $edit['pass']   = 'simpletestpass';
+   $edit['status'] = 1;
+
+   $account = user_save('', $edit);
+
+   $this->assertTrue(!empty($account->uid), t('User created with name %name and pass %pass', array('%name' => $edit['name'], '%pass' => $edit['pass'])), t('User login'));
+   if (empty($account->uid)) {
+     return FALSE;
+   }
+
+   // Add the raw password so that we can log in as this user.
+   $account->pass_raw = $edit['pass'];
+   return $account;
+ }
 }

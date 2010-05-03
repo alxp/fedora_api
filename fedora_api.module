@@ -351,6 +351,7 @@ function addDatastream($pid, $dsID, $controlGroup, $file_path = '', $ds_string =
            .(!empty($mimeType) ? "mimeType=$mimeType&" : '')
            .(!empty($logMessage) ? "logMessage=$logMessage" : '');
   $response = drupal_http_request($request, $headers, 'POST', $params);
+  
   return $response;
 }
 
