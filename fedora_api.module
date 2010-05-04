@@ -307,8 +307,8 @@ function addDatastream($pid, $dsID, $controlGroup, $file_path = '', $ds_string =
 
   $params = NULL;
   
-  $headers = array('Keep-Alive' => 115,
-                   'Connection' => 'keep-alive');
+  $headers = array();//'Keep-Alive' => 115,
+                  // 'Connection' => 'keep-alive');
   if (!empty($dsLocation)) {
     if ($controlGroup == 'X') {
       $headers['Content-Type'] = 'text/xml';
@@ -628,21 +628,20 @@ function _insert_credentials_into_url($fedora_url = '', $fedora_user = '', $fedo
   if (empty($fedora_url)) {
     $fedora_url = variable_get('fedora_server_url', 'http://localhost:8080/fedora');
   }
-  if (empty($user)) {
-    $user_var = variable_get('fedora_user', '');
-    if (!empty($user_var)) {
-      $fedora_user = variable_get('fedora_user', '');
-      $fedora_pass = variable_get('fedora_password', '');
-    }
-    elseif ($user->uid == 0) {
-      $fedora_user = 'anonymous';
-      $fedora_pass = 'anonymous';
-    }
-    else {
-      $fedora_user = $user->name;
-      $fedora_pass = $user->pass;
-    }
+  $user_var = variable_get('fedora_user', '');
+  if (!empty($user_var)) {
+    $fedora_user = variable_get('fedora_user', '');
+    $fedora_pass = variable_get('fedora_password', '');
   }
+  elseif ($user->uid == 0) {
+    $fedora_user = 'anonymous';
+    $fedora_pass = 'anonymous';
+  }
+  else {
+    $fedora_user = $user->name;
+    $fedora_pass = $user->pass;
+  }
+
   return (!empty($fedora_user) ? substr_replace($fedora_url, "$fedora_user".(!empty($fedora_pass) ? ":$fedora_pass@" : '@'), strpos($fedora_url, '://') + 3, 0) : $fedora_url);
 }
 

@@ -28,13 +28,13 @@ class FedoraAPITestCase extends DrupalWebTestCase {
     $this->pass("Password: ".$repository_user->pass);
 
     $this->drupalLogin($repository_user);
-
  }
 
   public function testAPIA() {
     module_load_include('php', 'fedora_api');
     global $base_url;
-    
+    variable_set('fedora_user', 'simpletestuser');
+    variable_set('fedora_password', '41fe63c9636c6649f0a4747400f0f95e');
     $profile = getObjectProfile('islandora:demos');
 
     if (empty($profile->error)) {
@@ -105,6 +105,7 @@ class FedoraAPITestCase extends DrupalWebTestCase {
 
     $test_file_DSID = $this->randomName(11);
     $file_add_data = addDatastream('fedora-system:FedoraObject-3.0', $test_file_DSID, 'M', getcwd().'/themes/garland/logo.png', '', '', '', 'hipig', 'A', '', '', '', 'image/png');
+
     if ($file_add_data->code == 201) {
       $this->pass('Add managed datastream from file test successful: '.$file_add_data->error);
     }
