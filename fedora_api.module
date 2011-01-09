@@ -35,7 +35,7 @@ function fedora_api_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('fedora_api_settings'),
     'access arguments' => array('administer site configuration'),
-    'type' => MENU_NORMAL_TASK,
+    'type' => MENU_NORMAL_ITEM,
   );
   $items['admin/config/fedora_repository/server'] = array(
     'title' => 'Fedora Server Settings',
