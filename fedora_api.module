@@ -14,7 +14,13 @@
  * @see http://drupal.org/node/1354
  */
 function fedora_api_permission() {
-  return('administer fedora');
+  $permissions = array();
+  $permissions['administer fedora'] = array (
+      'title' => t('Administer Fedora Commons Repository'),
+      'description' => t('Set up the connection to a Fedora Commons repository and define default collection information for this site.'),
+      'restrict access' => TRUE,
+  );
+  return $permissions;
 }
 
 /**
