@@ -35,25 +35,25 @@ class FedoraAPITestCase extends DrupalWebTestCase {
     global $base_url;
     variable_set('fedora_user', 'simpletestuser');
     variable_set('fedora_password', '41fe63c9636c6649f0a4747400f0f95e');
-    $profile = getObjectProfile('islandora:demos');
+    $profile = fedora_api_getObjectProfile('islandora:demos');
 
     if (empty($profile->error)) {
       $this->pass('Fedora API-A getObjectProfile passed.');
     }
-    $dslist = listDatastreams('islandora:demos');
+    $dslist = fedora_api_listDatastreams('islandora:demos');
     if (empty($dslist->error)) {
       $this->pass('Fedora API-A listDatastreams passed.');
     }
-    $methodlist = listMethods('islandora:demos');
+    $methodlist = fedora_api_listMethods('islandora:demos');
     if (empty($methodlist->error)) {
       $this->pass('Fedora API-A listMethods passed.');
     }
 
-    $find_results = findObjects("*islandora*", "" );
+    $find_results = fedora_api_findObjects("*islandora*", "" );
     if (empty($find_results->error)) {
       $this->pass('Fedora API-A findObjects passed.');
     }
-    $dc_stream = getDatastreamDissemination("fedora-system:FedoraObject-3.0", "DC", '', 'false');
+    $dc_stream = fedora_api_getDatastreamDissemination("fedora-system:FedoraObject-3.0", "DC", '', 'false');
     if (empty($dc_stream->error)) {
       if (strpos($dc_stream->data, '<oai_dc:dc') >= 0) {
         $this->pass('Fedora API-A getDatastreamDissemination passed.');
@@ -66,7 +66,7 @@ class FedoraAPITestCase extends DrupalWebTestCase {
       $this->fail("Error calling drupal_http_request. ".$dc_stream->error);
     }
 
-    $dc_html = getDissemination('fedora-system:FedoraObject-3.0', 'fedora-system:3', 'viewDublinCore');
+    $dc_html = fedora_api_getDissemination('fedora-system:FedoraObject-3.0', 'fedora-system:3', 'viewDublinCore');
     if (empty($dc_html->error)) {
       if (strpos($dc_html->data, 'Dublin Core View') >= 0) {
         $this->pass('Fedora API-A getDissemination passed.');
@@ -79,7 +79,7 @@ class FedoraAPITestCase extends DrupalWebTestCase {
       $this->fail("Error calling drupal_http_request for getDissemination: $dc_html->error");
     }
 
-    $obj_hist = getObjectHistory('fedora-system:FedoraObject-3.0');
+    $obj_hist = fedora_api_getObjectHistory('fedora-system:FedoraObject-3.0');
     if (empty($obj_hist->error)) {
       if (strpos($obj_hist->data, 'fedoraObjectHistory') >= 0) {
         $this->pass('Fedora API-A getObjectHistory passed.');
@@ -94,7 +94,7 @@ class FedoraAPITestCase extends DrupalWebTestCase {
 
     $testDSID = $this->randomName(11);
 
-    $data = addDatastream('fedora-system:FedoraObject-3.0', $testDSID, 'M', '', '', $base_url.'/themes/garland/logo.png', '', 'hipig', 'A', '', '', '', 'image/png');
+    $data = fedora_api_addDatastream('fedora-system:FedoraObject-3.0', $testDSID, 'M', '', '', $base_url.'/themes/garland/logo.png', '', 'hipig', 'A', '', '', '', 'image/png');
 
     if ($data->code == 201) {
       $this->pass('Add managed datastream test successful: '.$data->error);
@@ -104,7 +104,7 @@ class FedoraAPITestCase extends DrupalWebTestCase {
     }
 
     $test_file_DSID = $this->randomName(11);
-    $file_add_data = addDatastream('fedora-system:FedoraObject-3.0', $test_file_DSID, 'M', getcwd().'/themes/garland/logo.png', '', '', '', 'hipig', 'A', '', '', '', 'image/png');
+    $file_add_data = fedora_api_addDatastream('fedora-system:FedoraObject-3.0', $test_file_DSID, 'M', getcwd().'/themes/garland/logo.png', '', '', '', 'hipig', 'A', '', '', '', 'image/png');
 
     if ($file_add_data->code == 201) {
       $this->pass('Add managed datastream from file test successful: '.$file_add_data->error);
@@ -113,7 +113,7 @@ class FedoraAPITestCase extends DrupalWebTestCase {
       $this->fail('Problem running testaddDatastream for file: '.$file_add_data->error);
     }
 
-    $test_export = fedora_export('fedora-system:FedoraObject-3.0');
+    $test_export = fedora_api_export('fedora-system:FedoraObject-3.0');
     if (empty($test_export->error)) {
       if (strpos($test_export->data, 'foxml:digitalObject') >= 0) {
         $this->pass("Successfully exported FOXML.");
@@ -126,7 +126,7 @@ class FedoraAPITestCase extends DrupalWebTestCase {
       $this->fail('Problem executing drupal_http_request for fedora_export: '.$test_export->error);
     }
 
-    $test_nextPID = getNextPID();
+    $test_nextPID = fedora_api_getNextPID();
     if (empty($test_nextPID->error)) {
       if (strpos($test_nextPID->data, 'pidlist') >= 0) {
         $this->pass('Successfully called getNextPID.');
@@ -139,7 +139,7 @@ class FedoraAPITestCase extends DrupalWebTestCase {
       $this->fail('Problem executing drupal_http_request for getNextPID: '.$test_nextPID->error);
     }
 
-    $test_objectXML = getObjectXML('fedora-system:FedoraObject-3.0');
+    $test_objectXML = fedora_api_getObjectXML('fedora-system:FedoraObject-3.0');
     if (empty($test_objectXML->error)) {
       if (strpos($test_objectXML->data, 'foxml:digitalObject') >= 0) {
         $this->pass('Successfully called getObjectXML.');
