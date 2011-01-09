@@ -1,8 +1,8 @@
 ; $Id$
 name = Fedora API
-description = Wrapper for the Fedora Repository REST API.
+description = Wrapper for the Fedora Commons Repository REST API.
 package = Fedora Repository
-version = 6.1dev
+version = 7.1dev
 core = 7.x
 
 files[] = fedora_api.module
