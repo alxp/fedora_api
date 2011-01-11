@@ -24,7 +24,7 @@ class Fedora_Item {
     if (isset(Fedora_Item::$instantiated_pids[$pid])) {
       $this->objectProfile =& Fedora_Item::$instantiated_pids[$pid]->objectProfile;
       $this->datastreams =& Fedora_Item::$instantiated_pids[$pid]->datastreams;
-      $this->datastreams_list =& Fedora_Item::$instantiated_pids[$pid]->datastreams_list;
+      $datastreams_doc =& Fedora_Item::$instantiated_pids[$pid]->datastreams_list;
     }
     else { 
       $response = fedora_api_getObjectProfile($pid);
@@ -32,14 +32,27 @@ class Fedora_Item {
       
 
       if ($response->code == 200) {
-	$this->objectProfile = new SimpleXMLElement($response->data);
-	$this->datastreams = $this->get_datastreams_list_as_array();
+        $this->objectProfile = new SimpleXMLElement($response->data);
+        $this->datastreams = $this->get_datastreams_list_as_array();
+        $this->parseObjectProfile($this->objectProfile);  
       } else {
-	$this->objectProfile = '';
-	$this->datastreams = array();
+        $this->objectProfile = '';
+        $this->datastreams = array();
       }
       Fedora_Item::$instantiated_pids[$pid]=&$this;
     }
+  }
+  
+  private function parseObjectProfile($object_profile) {
+    $this->label = (string) $object_profile->objLabel;
+    $this->ownerId = (string) $object_profile->objOwnerId;
+    $this->models = array();
+    foreach ($object_profile->objModels->model as $model) {
+      $this->models[] = (string) $model;
+    }
+    $this->createDate = new DateTime((string) $object_profile->objCreateDate);
+    $this->lastModDate = new DateTime((string) $object_profile->objLastModDate);
+    $this->state = (string) $object_profile->objState;
   }
   
   /**
@@ -57,33 +70,36 @@ class Fedora_Item {
    * @return array
    */
   function get_datastreams_list_as_array() {
-    $this->get_datastreams_list_as_SimpleXML();
+    
+    $result = fedora_api_listDatastreams($this->pid);
+    if ($result->code != 200) {
+      return NULL;
+    }
+    $datastreams_doc = new SimpleXMLElement($result->data);
     $ds_list = array();
-    if ($this->datastreams_list != FALSE) {
+    if ($datastreams_doc != FALSE) {
 
-      // This is a really annoying edge case: if there is only one
-      // datastream, instead of returning it as an array, only
-      // the single item will be returned directly. We have to
-      // check for this.
-      if (count($this->datastreams_list->datastreamDef) >= 2) {
-        foreach ($this->datastreams_list->datastreamDef as $ds) {
-          if (!is_object($ds)) {
-            print_r($ds);
+      foreach ($datastreams_doc->datastream as $ds) {
+        foreach($ds->attributes() as $field => $value) {
+          switch ($field) {
+            case 'dsid':
+              $dsid = (string) $value;
+              break;            
+            case 'label':
+              $dslabel = (string) $value;
+              break;
+            case 'mimeType':
+              $dsmime = (string) $value;
+              break;
           }
-          $ds_list[$ds->ID]['label'] = $ds->label;
-          $ds_list[$ds->ID]['MIMEType'] = $ds->MIMEType;
-          $ds_list[$ds->ID]['URL'] = $this->url() . '/'. $ds->ID . '/'. drupal_urlencode($ds->label);
+        }
+        if (!empty($dsid) && !empty($dsmime) && $dslabel != NULL) {
+          $ds_list[$dsid] = array();
+          $ds_list[$dsid]['label'] = $dslabel;
+          $ds_list[$dsid]['mimeType'] = $dsmime;
         }
       }
-      else {
-        $ds = $this->datastreams_list->datastreamDef;
-        $ds_list[$ds->ID]['label'] = $ds->label;
-        $ds_list[$ds->ID]['MIMEType'] = $ds->MIMEType;
-        $ds_list[$ds->ID]['URL'] = $this->url().'/'.$ds->ID.'/'.drupal_urlencode($ds->label);
-      }
     }
-
     return $ds_list;
   }
-
 }
