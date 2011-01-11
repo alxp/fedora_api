@@ -3,9 +3,11 @@
 /**
  * An wrapper for Fedora's raw API calls to present Fedora items as manageable objects.
  */
-class Fedora_Item {
+require_once('PropertyObject.inc');
+
+class Fedora_Item extends PropertyObject {
   public $pid = NULL; // The $pid of the fedora object represented by an instance of this class.
-  public $objectProfile = NULL;
+  private $objectProfile = NULL;
   public $datastreams = NULL;
   
   private static $instantiated_pids = array();
@@ -27,33 +29,11 @@ class Fedora_Item {
       $datastreams_doc =& Fedora_Item::$instantiated_pids[$pid]->datastreams_list;
     }
     else { 
-      $response = fedora_api_getObjectProfile($pid);
-      
-      
-
-      if ($response->code == 200) {
-        $this->objectProfile = new SimpleXMLElement($response->data);
-        $this->datastreams = $this->get_datastreams_list_as_array();
-        $this->parseObjectProfile($this->objectProfile);  
-      } else {
-        $this->objectProfile = '';
-        $this->datastreams = array();
-      }
+      $this->refreshObjectProfile();
       Fedora_Item::$instantiated_pids[$pid]=&$this;
     }
   }
-  
-  private function parseObjectProfile($object_profile) {
-    $this->label = (string) $object_profile->objLabel;
-    $this->ownerId = (string) $object_profile->objOwnerId;
-    $this->models = array();
-    foreach ($object_profile->objModels->model as $model) {
-      $this->models[] = (string) $model;
-    }
-    $this->createDate = new DateTime((string) $object_profile->objCreateDate);
-    $this->lastModDate = new DateTime((string) $object_profile->objLastModDate);
-    $this->state = (string) $object_profile->objState;
-  }
+ 
   
   /**
    * Returns an associative array of this object's datastreams. Results look like this:
@@ -101,5 +81,80 @@ class Fedora_Item {
       }
     }
     return $ds_list;
+  }
+  
+  protected function get_label() {
+    return (string) $this->objectProfile->objLabel;
+  }
+  
+  protected function set_label($label) {
+    $this->modifyObject($label);
+  }
+  
+  protected function get_ownerId() {
+    return  (string) $this->objectProfile->objOwnerId;
+  }
+  
+  protected function set_ownerId($ownerId) {
+    $this->modifyObject($this->label, $ownerId);
+  }
+  
+  protected function get_state() {
+    return (string) $this->objectProfile->objState;
+  }
+  
+  protected function set_state($state) {
+    $this->modifyObject($this->label, $this->ownerId, $state);
+
+  }
+  
+  protected function get_pid() {
+    return $this->pid;
+  }
+  
+  protected function get_createDate() {
+    return new DateTime((string) $this->objectProfile->objCreateDate);
+  }
+  
+  protected function get_lastModDate() {
+    return  new DateTime((string) $this->objectProfile->objLastModDate);
+  }
+  
+  protected function get_models() {
+    $models = array();
+    foreach ($this->objectProfile->objModels->model as $model) {
+      $models[] = (string) $model;
+    }
+    return $models;
+  }
+  
+  private function refreshObjectProfile() {
+    $response = fedora_api_getObjectProfile($this->pid);
+
+    if ($response->code == 200) {
+      $this->objectProfile = new SimpleXMLElement($response->data);
+      $this->datastreams = $this->get_datastreams_list_as_array();
+    } else {
+      $this->objectProfile = '';
+      $this->datastreams = array();
+    }
+  }
+  
+  /**
+   * Wrapper for Fedora's modifyObject REST call. Updates the local objectProfile after each call.
+   * @param type $label
+   * @param type $ownerId
+   * @param type $state One of 'A' for active, 'D' for deleted, or 'I' for inactive 
+   * @param type $logMessage 
+   */
+  private function modifyObject($label = NULL, $ownerId = '', $state = '', $logMessage = '') {
+    $response = fedora_api_modifyObject($this->pid, $label, $ownerId, $state, $logMessage);
+    if ($response->code == 200) {
+      $this->refreshObjectProfile();
+      return TRUE;
+    }
+    else {
+      return FALSE;
+    }
   }
 }
