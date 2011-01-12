@@ -580,7 +580,7 @@ function fedora_api_modifyDatastream($pid, $dsID, $file_path = '', $dsLocation =
  * @todo Please document this function.
  * @see http://drupal.org/node/1354
  */
-function fedora_api_modifyObject($pid, $label = NULL, $ownerId = '', $state = '', $logMessage = '') {
+function fedora_api_modifyObject($pid, $label = NULL, $ownerId = NULL, $state = NULL, $logMessage = NULL) {
   $pid = drupal_encode_path($pid);
   $label = drupal_encode_path($label);
   $logMessage = drupal_encode_path($logMessage);

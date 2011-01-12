@@ -21,22 +21,21 @@ class FedoraAPITestCase extends DrupalWebTestCase {
   }
 
   function setUp() {
-    parent::setUp('fedora_api');
-
-    //module_load_include('php', 'fedora_repository', 'api/fedora_item');
+    parent::setUp('fedora_api');  
 
     // Create and login user.
     $this->privileged_user = $this->drupalCreateFedoraUser();
     $this->pass("Password: ".$this->privileged_user->pass);
 
     $this->drupalLogin($this->privileged_user);
- }
-
-  public function testAPIA() {
-    module_load_include('php', 'fedora_api');
+    //module_load_include('module', 'fedora_api');
     global $base_url;
     variable_set('fedora_user', 'fedoraAdmin');
     variable_set('fedora_password', 'fedoraAdmin');
+ }
+
+  public function testAPIA() {
+    global $base_url;
     $profile = fedora_api_getObjectProfile('islandora:demos');
 
     if (empty($profile->error)) {
@@ -155,6 +154,9 @@ class FedoraAPITestCase extends DrupalWebTestCase {
     }
   }
 
+ public function testFedoraItem() {
+   
+ }
 
  protected function drupalCreateFedoraUser($permissions = array('access comments', 'access content', 'post comments')) {
    // Create a role with the given permission set.

@@ -7,3 +7,5 @@ core = 7.x
 
 files[] = fedora_api.module
 files[] = fedora_api.test
+files[] = fedora_api.item.inc
+files[] = PropertyObject.inc

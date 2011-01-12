@@ -104,7 +104,7 @@ class Fedora_Item extends PropertyObject {
   }
   
   protected function set_state($state) {
-    $this->modifyObject($this->label, $this->ownerId, $state);
+    $this->modifyObject(NULL, NULL, $state);
 
   }
   
@@ -147,7 +147,7 @@ class Fedora_Item extends PropertyObject {
    * @param type $state One of 'A' for active, 'D' for deleted, or 'I' for inactive 
    * @param type $logMessage 
    */
-  private function modifyObject($label = NULL, $ownerId = '', $state = '', $logMessage = '') {
+  private function modifyObject($label = NULL, $ownerId = NULL, $state = NULL, $logMessage = NULL) {
     $response = fedora_api_modifyObject($this->pid, $label, $ownerId, $state, $logMessage);
     if ($response->code == 200) {
       $this->refreshObjectProfile();
