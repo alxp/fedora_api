@@ -9,7 +9,7 @@
  * Run through tests of the Fedora API funcitons.
  */
 class FedoraAPITestCase extends DrupalWebTestCase {
-
+  private $pidslist = array();
   protected $privileged_user;
   
   public static function getInfo() {
@@ -32,7 +32,7 @@ class FedoraAPITestCase extends DrupalWebTestCase {
     global $base_url;
     variable_set('fedora_user', 'fedoraAdmin');
     variable_set('fedora_password', 'fedoraAdmin');
- }
+  }
 
   public function testAPIA() {
     global $base_url;
@@ -154,33 +154,77 @@ class FedoraAPITestCase extends DrupalWebTestCase {
     }
   }
 
- public function testFedoraItem() {
-   
- }
+  public function testAPIM() {
+    // Create a new object with no pid or any other parameters specified.
+    // Should return with the PID, and only contain the default 'DC' datastream.
+    $resp_blank_pid = fedora_api_ingest();
+    
+    if ($resp_blank_pid->code == 201) {
+      $this->pass("Object with new PID $resp_blank_pid->data created successfully.", 'API-M');
+      $this->pidslist[] = $resp_blank_pid->data;
+    }
+    else {
+      $this->fail("Attempt to create object with blank pid. $resp_blank_pid->error");
+    }
+    
+    // Test create an object with a given pid namespace.
+    $namespace = $this->randomName(6);
+    $resp_namespace = fedora_api_ingest(NULL, NULL, NULL, NULL, NULL, NULL, NULL, $namespace);
+    if ($resp_namespace->code == 201) {
+      $this->pass("Object with blank pid, namespace $namespace, new PID $resp_namespace->data created successfully.", 'API-M');
+      $this->pidslist[] = $resp_namespace->data;
+    }
+    else {
+      $this->fail("Attempt to create object with blank pid, namespace $namespace. $resp_namespace->error");
+    }
+    
+    // Test ingest from an XML file. First do a sanity test to make sure the pid for the object doesn't already exist.
+    $foxml_pid = 'gpWr4f:1';
+    $resp_foxml = fedora_api_ingest(drupal_get_path('module', 'fedora_api').'/test_data/test_ingest_foxml.xml');
+    if ($resp_foxml->code == 201) {
+      $this->pass('Inest object from existing FOXML file.');
+      $this->pidslist[] = $resp_foxml->data;
+    }
+    else {
+      $this->fail("Ingest object from existing FOXML file. $resp_foxml->error");
+    }
+  }
+  
+  public function testFedoraItem() {
+    
+  }
 
- protected function drupalCreateFedoraUser($permissions = array('access comments', 'access content', 'post comments')) {
-   // Create a role with the given permission set.
-   if (!($rid = $this->drupalCreateRole($permissions))) {
+  protected function drupalCreateFedoraUser($permissions = array('access comments', 'access content', 'post comments')) {
+    // Create a role with the given permission set.
+    if (!($rid = $this->drupalCreateRole($permissions))) {
      return FALSE;
-   }
+    }
 
-   // Create a user assigned to that role.
-   $edit = array();
-   $edit['name']   = 'simpletestuser';
-   $edit['mail']   = $edit['name'] . '@example.com';
-   $edit['roles']  = array($rid => $rid);
-   $edit['pass']   = 'simpletestpass';
-   $edit['status'] = 1;
+    // Create a user assigned to that role.
+    $edit = array();
+    $edit['name']   = 'simpletestuser';
+    $edit['mail']   = $edit['name'] . '@example.com';
+    $edit['roles']  = array($rid => $rid);
+    $edit['pass']   = 'simpletestpass';
+    $edit['status'] = 1;
 
-   $account = user_save('', $edit);
+    $account = user_save('', $edit);
 
-   $this->assertTrue(!empty($account->uid), t('User created with name %name and pass %pass', array('%name' => $edit['name'], '%pass' => $edit['pass'])), t('User login'));
-   if (empty($account->uid)) {
+    $this->assertTrue(!empty($account->uid), t('User created with name %name and pass %pass', array('%name' => $edit['name'], '%pass' => $edit['pass'])), t('User login'));
+    if (empty($account->uid)) {
      return FALSE;
-   }
+    }
 
-   // Add the raw password so that we can log in as this user.
-   $account->pass_raw = $edit['pass'];
-   return $account;
- }
+    // Add the raw password so that we can log in as this user.
+    $account->pass_raw = $edit['pass'];
+    return $account;
+  }
+  
+  protected function tearDown() {
+    foreach ($this->pidslist as $pid) {
+      fedora_api_purgeObject($pid, "Drupal SimpleTest cleanup");
+    }
+    parent::tearDown();
+    
+  }
 }

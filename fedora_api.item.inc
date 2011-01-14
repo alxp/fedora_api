@@ -157,4 +157,8 @@ class Fedora_Item extends PropertyObject {
       return FALSE;
     }
   }
+  
+  static function createItem( ) {
+    fedora_api_ingest();
+  }
 }

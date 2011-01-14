@@ -451,8 +451,8 @@ function fedora_api_getObjectXML($pid) {
  *
  * Issue
  */
-function fedora_api_ingest($foxml_file = '', $foxml_string = '', $pid = '', $new = TRUE, $label = '', $format = 'info:fedora/fedora-system:FOXML-1.1', $encoding = 'UTF-8', $namespace = '',
-                $ownerId = '', $logMessage = '', $ignoreMime = 'false') {
+function fedora_api_ingest($foxml_file = NULL, $foxml_string = NULL, $pid = NULL, $new = TRUE, $label = NULL, $format = 'info:fedora/fedora-system:FOXML-1.1', $encoding = 'UTF-8', $namespace = NULL,
+                $ownerId = NULL, $logMessage = NULL, $ignoreMime = 'false') {
   if (empty($pid)) {
     // Set $new to TRUE regardless of what the user specified if no PID is given
     $pid = "new";
@@ -480,9 +480,6 @@ function fedora_api_ingest($foxml_file = '', $foxml_string = '', $pid = '', $new
     $headers["Content-Type"] = "multipart/form-data; boundary=$boundary";
     $params = _fedora_api_multipart_encode($boundary, array('string' => $foxml_string));
   }
-  else {
-    return NULL;
-  }
 
   $fedora_url = _fedora_api_insert_credentials_into_url();
 
@@ -494,7 +491,7 @@ function fedora_api_ingest($foxml_file = '', $foxml_string = '', $pid = '', $new
            . (!empty($namespace) ? "namespace=$namespace&" : '')
            . (!empty($ownerId) ? "ownerId=$ownerId&" : '')
            . (!empty($logMessage) ? "logMessage=$logMessage&" : '')
-           . (!empty($igncoreMime) ? "ignoreMime=$ignoreMime&" : '');
+           . (!empty($ignoreMime) ? "ignoreMime=$ignoreMime&" : '');
   $response = drupal_http_request($request, array('headers' => $headers, 'method' => 'POST', 'data' => $params));
   return $response;
 
