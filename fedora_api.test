@@ -187,13 +187,24 @@ class FedoraAPITestCase extends DrupalWebTestCase {
     $foxml_pid = 'gpWr4f:1';
     $resp_foxml = $api->ingest(drupal_get_path('module', 'fedora_api').'/test_data/test_ingest_foxml.xml');
     if ($resp_foxml->code == 201) {
-      $this->pass('Inest object from existing FOXML file.');
+      $this->pass('Ingest object from existing FOXML file.');
       $this->pidslist[] = $resp_foxml->data;
     }
     else {
       $this->fail("Ingest object from existing FOXML file. $resp_foxml->error");
     }
     
+    // Test ingest from an FOXML string.
+    $foxml_string_pid = 'lsjdFijj:2333';
+    $foxml_string_data = file_get_contents(drupal_get_path('module', 'fedora_api').'/test_data/test_ingest_foxml_2.xml');
+    $resp_foxml_string = $api->ingest(NULL, $foxml_string_data);
+    if ($resp_foxml_string->code == 201) {
+      $this->pass('Ingest object from FOXML string');
+      $this->pidslist[] = $resp_foxml->data;
+    }
+    else {
+      $this->fail("Ingest object from FOXML string. $resp_foxml_string");
+    }
     
   }
   
