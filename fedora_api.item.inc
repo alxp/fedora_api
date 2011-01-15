@@ -9,7 +9,7 @@ class Fedora_Item extends PropertyObject {
   public $pid = NULL; // The $pid of the fedora object represented by an instance of this class.
   private $objectProfile = NULL;
   public $datastreams = NULL;
-  
+  public $connection = NULL;
   private static $instantiated_pids = array();
   
   
@@ -18,12 +18,19 @@ class Fedora_Item extends PropertyObject {
    * Throws a SOAPException if the PID is not in the repository.
    *
    * @param string $pid
+   * @param FedoraConnection $connection
    * @return Fedora_Item
    */
-  function __construct($pid) {
-    
+  function __construct($pid, $connection = NULL) {
+    if ($this->connection) {
+      
+    }
+    else {
+      // Make a default connection using Drupal's variables.
+    }
     $this->pid = $pid;
     if (isset(Fedora_Item::$instantiated_pids[$pid])) {
+      $this->connection =& Fedora_Item::$instantiated_pids[$pid]->connection;
       $this->objectProfile =& Fedora_Item::$instantiated_pids[$pid]->objectProfile;
       $this->datastreams =& Fedora_Item::$instantiated_pids[$pid]->datastreams;
       $datastreams_doc =& Fedora_Item::$instantiated_pids[$pid]->datastreams_list;

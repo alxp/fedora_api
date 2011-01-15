@@ -5,7 +5,9 @@ package = Fedora Repository
 version = 7.1dev
 core = 7.x
 
-files[] = fedora_api.module
-files[] = fedora_api.test
+files[] = fedora_api.connection.inc
 files[] = fedora_api.item.inc
+files[] = fedora_api.module
+files[] = fedora_api.raw.inc
+files[] = fedora_api.test
 files[] = PropertyObject.inc

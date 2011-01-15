@@ -28,7 +28,7 @@ class FedoraAPITestCase extends DrupalWebTestCase {
     $this->pass("Password: ".$this->privileged_user->pass);
 
     $this->drupalLogin($this->privileged_user);
-    //module_load_include('module', 'fedora_api');
+    module_load_include('inc', 'fedora_api', 'fedora_api.raw');
     global $base_url;
     variable_set('fedora_user', 'fedoraAdmin');
     variable_set('fedora_password', 'fedoraAdmin');
@@ -188,6 +188,8 @@ class FedoraAPITestCase extends DrupalWebTestCase {
     else {
       $this->fail("Ingest object from existing FOXML file. $resp_foxml->error");
     }
+    
+    
   }
   
   public function testFedoraItem() {
