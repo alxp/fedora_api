@@ -414,7 +414,7 @@ class FedoraAPI {
       // We must construct a multipart HTTP POST.
       $boundary = 'A0sFSD';
       $headers["Content-Type"] = "multipart/form-data; boundary=$boundary";
-      $params = _fedora_api_multipart_encode($boundary, array('string' => $foxml_string));
+      $params = _fedora_api_multipart_encode($boundary, array('foxml_string' => $foxml_string));
     }
 
     $fedora_url = $this->connection->requestURL(); 
@@ -591,6 +591,9 @@ function _fedora_api_multipart_encode($boundary, $params) {
     elseif ($key == 'foxml_file') {
       $output .= _fedora_api_multipart_enc_xml_file($value);
     }
+    elseif ($key == 'foxml_string') {
+      $output .= _fedora_api_multipart_enc_xml_string($value);
+    }
     else {
       $output .= _fedora_api_multipart_enc_text($key, $value);
     }
@@ -623,6 +626,16 @@ function _fedora_api_multipart_enc_xml_file($path) {
   $data .= "Content-Transfer-Encoding: UTF-8\r\n";
   $data .= "Content-Type: $mimetype\r\n\r\n";
   $data .= file_get_contents($path) . "\r\n";
+  return $data;
+}
+
+
+function _fedora_api_multipart_enc_xml_string($xml_data) { 
+  $mimetype = "text/xml";
+  $data = "Content-Disposition: form-data; name=\"foxml\"; filename=\"FOXML\"\r\n";
+  $data .= "Content-Transfer-Encoding: UTF-8\r\n";
+  $data .= "Content-Type: $mimetype\r\n\r\n";
+  $data .= $xml_data . "\r\n";
   return $data;
 }
 

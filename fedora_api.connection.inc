@@ -15,19 +15,24 @@ class FedoraConnection {
       $this->url = variable_get('fedora_server_url', 'http://localhost:8080/fedora');
     }
     
-        
-    $user_var = variable_get('fedora_user', '');
-    if (!empty($user_var)) {
-      $fedora_user = variable_get('fedora_user', '');
-      $fedora_pass = variable_get('fedora_password', '');
-    }
-    elseif ($user->uid == 0) {
-      $fedora_user = 'anonymous';
-      $fedora_pass = 'anonymous';
+    if (!empty($username)) {
+      $fedora_user = $username;
+      $fedora_pass = $password;
     }
     else {
-      $fedora_user = $user->name;
-      $fedora_pass = $user->pass;
+      $user_var = variable_get('fedora_user', '');
+      if (!empty($user_var)) {
+        $fedora_user = variable_get('fedora_user', '');
+        $fedora_pass = variable_get('fedora_password', '');
+      }
+      elseif ($user->uid == 0) {
+        $fedora_user = 'anonymous';
+        $fedora_pass = 'anonymous';
+      }
+      else {
+        $fedora_user = $user->name;
+        $fedora_pass = $user->pass;
+      }
     }
     $this->username = $fedora_user;
     $this->password = $fedora_pass;
