@@ -36,25 +36,28 @@ class FedoraAPITestCase extends DrupalWebTestCase {
 
   public function testAPIA() {
     global $base_url;
-    $profile = fedora_api_getObjectProfile('islandora:demos');
-
+    $api = new FedoraAPI();
+    
+    
+    $profile = $api->getObjectProfile('islandora:demos');
+    
     if (empty($profile->error)) {
       $this->pass('Fedora API-A getObjectProfile passed.');
     }
-    $dslist = fedora_api_listDatastreams('islandora:demos');
+    $dslist = $api->listDatastreams('islandora:demos');
     if (empty($dslist->error)) {
       $this->pass('Fedora API-A listDatastreams passed.');
     }
-    $methodlist = fedora_api_listMethods('islandora:demos');
+    $methodlist = $api->listMethods('islandora:demos');
     if (empty($methodlist->error)) {
       $this->pass('Fedora API-A listMethods passed.');
     }
 
-    $find_results = fedora_api_findObjects("*islandora*", "" );
+    $find_results = $api->findObjects("*islandora*", "" );
     if (empty($find_results->error)) {
       $this->pass('Fedora API-A findObjects passed.');
     }
-    $dc_stream = fedora_api_getDatastreamDissemination("fedora-system:FedoraObject-3.0", "DC", '', 'false');
+    $dc_stream = $api->getDatastreamDissemination("fedora-system:FedoraObject-3.0", "DC", '', 'false');
     if (empty($dc_stream->error)) {
       if (strpos($dc_stream->data, '<oai_dc:dc') >= 0) {
         $this->pass('Fedora API-A getDatastreamDissemination passed.');
@@ -67,7 +70,7 @@ class FedoraAPITestCase extends DrupalWebTestCase {
       $this->fail("Error calling drupal_http_request. ".$dc_stream->error);
     }
 
-    $dc_html = fedora_api_getDissemination('fedora-system:FedoraObject-3.0', 'fedora-system:3', 'viewDublinCore');
+    $dc_html = $api->getDissemination('fedora-system:FedoraObject-3.0', 'fedora-system:3', 'viewDublinCore');
     if (empty($dc_html->error)) {
       if (strpos($dc_html->data, 'Dublin Core View') >= 0) {
         $this->pass('Fedora API-A getDissemination passed.');
@@ -80,7 +83,7 @@ class FedoraAPITestCase extends DrupalWebTestCase {
       $this->fail("Error calling drupal_http_request for getDissemination: $dc_html->error");
     }
 
-    $obj_hist = fedora_api_getObjectHistory('fedora-system:FedoraObject-3.0');
+    $obj_hist = $api->getObjectHistory('fedora-system:FedoraObject-3.0');
     if (empty($obj_hist->error)) {
       if (strpos($obj_hist->data, 'fedoraObjectHistory') >= 0) {
         $this->pass('Fedora API-A getObjectHistory passed.');
@@ -95,7 +98,7 @@ class FedoraAPITestCase extends DrupalWebTestCase {
 
     $testDSID = $this->randomName(11);
 
-    $data = fedora_api_addDatastream('fedora-system:FedoraObject-3.0', $testDSID, 'M', '', '', $base_url.'/themes/garland/logo.png', '', 'hipig', 'A', '', '', '', 'image/png');
+    $data = $api->addDatastream('fedora-system:FedoraObject-3.0', $testDSID, 'M', '', '', $base_url.'/themes/garland/logo.png', '', 'hipig', 'A', '', '', '', 'image/png');
 
     if ($data->code == 201) {
       $this->pass('Add managed datastream test successful: '.$data->error);
@@ -105,7 +108,7 @@ class FedoraAPITestCase extends DrupalWebTestCase {
     }
 
     $test_file_DSID = $this->randomName(11);
-    $file_add_data = fedora_api_addDatastream('fedora-system:FedoraObject-3.0', $test_file_DSID, 'M', getcwd().'/themes/garland/logo.png', '', '', '', 'hipig', 'A', '', '', '', 'image/png');
+    $file_add_data = $api->addDatastream('fedora-system:FedoraObject-3.0', $test_file_DSID, 'M', getcwd().'/themes/garland/logo.png', '', '', '', 'hipig', 'A', '', '', '', 'image/png');
 
     if ($file_add_data->code == 201) {
       $this->pass('Add managed datastream from file test successful: '.$file_add_data->error);
@@ -114,7 +117,7 @@ class FedoraAPITestCase extends DrupalWebTestCase {
       $this->fail('Problem running testaddDatastream for file: '.$file_add_data->error);
     }
 
-    $test_export = fedora_api_export('fedora-system:FedoraObject-3.0');
+    $test_export = $api->export('fedora-system:FedoraObject-3.0');
     if (empty($test_export->error)) {
       if (strpos($test_export->data, 'foxml:digitalObject') >= 0) {
         $this->pass("Successfully exported FOXML.");
@@ -127,7 +130,7 @@ class FedoraAPITestCase extends DrupalWebTestCase {
       $this->fail('Problem executing drupal_http_request for fedora_export: '.$test_export->error);
     }
 
-    $test_nextPID = fedora_api_getNextPID();
+    $test_nextPID = $api->getNextPID();
     if (empty($test_nextPID->error)) {
       if (strpos($test_nextPID->data, 'pidlist') >= 0) {
         $this->pass('Successfully called getNextPID.');
@@ -140,7 +143,7 @@ class FedoraAPITestCase extends DrupalWebTestCase {
       $this->fail('Problem executing drupal_http_request for getNextPID: '.$test_nextPID->error);
     }
 
-    $test_objectXML = fedora_api_getObjectXML('fedora-system:FedoraObject-3.0');
+    $test_objectXML = $api->getObjectXML('fedora-system:FedoraObject-3.0');
     if (empty($test_objectXML->error)) {
       if (strpos($test_objectXML->data, 'foxml:digitalObject') >= 0) {
         $this->pass('Successfully called getObjectXML.');
@@ -157,7 +160,9 @@ class FedoraAPITestCase extends DrupalWebTestCase {
   public function testAPIM() {
     // Create a new object with no pid or any other parameters specified.
     // Should return with the PID, and only contain the default 'DC' datastream.
-    $resp_blank_pid = fedora_api_ingest();
+    $api = new FedoraAPI();
+    
+    $resp_blank_pid = $api->ingest();
     
     if ($resp_blank_pid->code == 201) {
       $this->pass("Object with new PID $resp_blank_pid->data created successfully.", 'API-M');
@@ -169,7 +174,7 @@ class FedoraAPITestCase extends DrupalWebTestCase {
     
     // Test create an object with a given pid namespace.
     $namespace = $this->randomName(6);
-    $resp_namespace = fedora_api_ingest(NULL, NULL, NULL, NULL, NULL, NULL, NULL, $namespace);
+    $resp_namespace = $api->ingest(NULL, NULL, NULL, NULL, NULL, NULL, NULL, $namespace);
     if ($resp_namespace->code == 201) {
       $this->pass("Object with blank pid, namespace $namespace, new PID $resp_namespace->data created successfully.", 'API-M');
       $this->pidslist[] = $resp_namespace->data;
@@ -180,7 +185,7 @@ class FedoraAPITestCase extends DrupalWebTestCase {
     
     // Test ingest from an XML file. First do a sanity test to make sure the pid for the object doesn't already exist.
     $foxml_pid = 'gpWr4f:1';
-    $resp_foxml = fedora_api_ingest(drupal_get_path('module', 'fedora_api').'/test_data/test_ingest_foxml.xml');
+    $resp_foxml = $api->ingest(drupal_get_path('module', 'fedora_api').'/test_data/test_ingest_foxml.xml');
     if ($resp_foxml->code == 201) {
       $this->pass('Inest object from existing FOXML file.');
       $this->pidslist[] = $resp_foxml->data;
@@ -223,8 +228,9 @@ class FedoraAPITestCase extends DrupalWebTestCase {
   }
   
   protected function tearDown() {
+    $api = new FedoraAPI();
     foreach ($this->pidslist as $pid) {
-      fedora_api_purgeObject($pid, "Drupal SimpleTest cleanup");
+      $api->purgeObject($pid, "Drupal SimpleTest cleanup");
     }
     parent::tearDown();
     
