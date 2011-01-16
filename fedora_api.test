@@ -258,8 +258,30 @@ class FedoraAPITestCase extends DrupalWebTestCase {
     
     $client = new FedoraClient();
     $pid = $client->ingest();
-    //$item = $client->getObject();
+    $this->pidslist[] = $pid;
+    $item = new FedoraItem($pid);
+    $this->assertEqual($pid, $item->pid, "Instantiate FedoraItem Object $pid", 'FedoraItem');
+    $new_label = "The answer is: Moops.";
+    $item->label = $new_label;
+    $this->assertEqual($item->label, $new_label, "Test set label property.", 'FedoraItem');
+    // Assert against the output of the raw API call to make sure the label really changed.
+    $profile = $client->api->getObjectProfile($pid);
+    if ($profile->code == 200) {
+      $profile_doc = new SimpleXMLElement($profile->data);
+      $this->assertEqual($item->label, (string) $profile_doc->objLabel, 'Test label property against the raw API call.', 'FedoraItem');
+    }
+
+    // Do a similar test for modifying ownerId.
+    $new_ownerId = "FredTheTester";
+    $item->ownerId = $new_ownerId;
+    $this->assertEqual($item->ownerId, $new_ownerId, "Test set ownerId property.", 'FedoraItem');
     
+    // Assert against the output of the raw API call to make sure the ownerId really changed.
+    $profile = $client->api->getObjectProfile($pid);
+    if ($profile->code == 200) {
+      $profile_doc = new SimpleXMLElement($profile->data);
+      $this->assertEqual($item->ownerId, (string) $profile_doc->objOwnerId, 'Test ownerId property against the raw API call.', 'FedoraItem');
+    }
   }
 
   protected function drupalCreateFedoraUser($permissions = array('access comments', 'access content', 'post comments')) {
