@@ -203,15 +203,42 @@ class FedoraAPITestCase extends DrupalWebTestCase {
       $this->pidslist[] = $resp_foxml->data;
     }
     else {
-      $this->fail("Ingest object from FOXML string. $resp_foxml_string");
+      $this->fail("Ingest object from FOXML string. $resp_foxml_string->error");
     }
     
   }
   
+  public function testFedoraClient() {
+    // Test ingest
+    global $base_url;
+    $client = new FedoraClient();
+    
+    try {
+      $blank_pid = $client->ingest();
+      $this->pass("Ingest blank object $blank_pid", 'FedoraClient');
+      $this->pidslist[] = $blank_pid;
+    } catch (HttpException $e) {
+      $this->fail("Ingest blank object ".$e->getMessage(), 'FedoraClient');
+    }
+    // Attempt to ingest new object with existing pid, should raise an exception.
+    if (!empty($blank_pid)) {
+      try {
+        $double_pid = $client->ingest(NULL, NULL, array('pid' => $blank_pid));
+        $this->fail('Ingest with existing PID raises FedoraRest Exception');
+      }
+      catch (FedoraRestException $e) {
+        $this->pass('Ingest with existing PID raises FedoraRest Exception: '. $e->getMessage());
+      }
+    }
+    
+    
+  }
+  
+/*  
   public function testFedoraItem() {
     
   }
-
+*/
   protected function drupalCreateFedoraUser($permissions = array('access comments', 'access content', 'post comments')) {
     // Create a role with the given permission set.
     if (!($rid = $this->drupalCreateRole($permissions))) {

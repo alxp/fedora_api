@@ -5,6 +5,7 @@ package = Fedora Repository
 version = 7.1dev
 core = 7.x
 
+files[] = FedoraRestException.php
 files[] = fedora_api.client.inc
 files[] = fedora_api.connection.inc
 files[] = fedora_api.item.inc
