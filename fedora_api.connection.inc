@@ -50,6 +50,6 @@ class FedoraConnection {
   }
   
   function getObject($pid) {
-    return new Fedora_Item($pid, $this);
+    return new FedoraItem($pid, $this);
   }
 }

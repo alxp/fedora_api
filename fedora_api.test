@@ -200,7 +200,7 @@ class FedoraAPITestCase extends DrupalWebTestCase {
     $resp_foxml_string = $api->ingest(NULL, $foxml_string_data);
     if ($resp_foxml_string->code == 201) {
       $this->pass('Ingest object from FOXML string');
-      $this->pidslist[] = $resp_foxml->data;
+      $this->pidslist[] = $resp_foxml_string->data;
     }
     else {
       $this->fail("Ingest object from FOXML string. $resp_foxml_string->error");
@@ -224,21 +224,44 @@ class FedoraAPITestCase extends DrupalWebTestCase {
     if (!empty($blank_pid)) {
       try {
         $double_pid = $client->ingest(NULL, NULL, array('pid' => $blank_pid));
-        $this->fail('Ingest with existing PID raises FedoraRest Exception');
+        $this->fail('Ingest with existing PID raises FedoraRest Exception', 'FedoraClient');
       }
       catch (FedoraRestException $e) {
-        $this->pass('Ingest with existing PID raises FedoraRest Exception: '. $e->getMessage());
+        $this->pass('Ingest with existing PID raises FedoraRest Exception: '. $e->getMessage(), 'FedoraClient');
       }
     }
     
+    // Test findObjects for a term.
+    try {
+      $resultset = $client->findObjects('*');
+      $this->pass("findObjects with term \"*\" found ".count($resultset)." objects", 'FedoraClient');
+    }
+    catch (FedoraRestException $e) {
+      $this->fail("findObjects with term \"*\": " . $e->getMessage(), 'FedoraClient');
+    }
     
+    // Test findObjects for a single, specific object.
+    if (!empty($blank_pid)) {
+      try {
+        $resultset_query = $client->findObjects(NULL, "pid=$blank_pid");
+        $this->pass("Find object with pid $blank_pid.", 'FedoraClient');
+      }
+      catch (FedoraRestException $e) {
+        $this->fail("Find object with pid $blank_pid. " . $e->getMessage(), 'FedoraClient');
+      }
+    }
   }
   
-/*  
+  
   public function testFedoraItem() {
+    global $base_url;
+    
+    $client = new FedoraClient();
+    $pid = $client->ingest();
+    //$item = $client->getObject();
     
   }
-*/
+
   protected function drupalCreateFedoraUser($permissions = array('access comments', 'access content', 'post comments')) {
     // Create a role with the given permission set.
     if (!($rid = $this->drupalCreateRole($permissions))) {

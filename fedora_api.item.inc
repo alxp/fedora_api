@@ -5,11 +5,11 @@
  */
 require_once('PropertyObject.inc');
 
-class Fedora_Item extends PropertyObject {
+class FedoraItem extends PropertyObject {
   public $pid = NULL; // The $pid of the fedora object represented by an instance of this class.
   private $objectProfile = NULL;
   public $datastreams = NULL;
-  public $connection = NULL;
+  public $client = NULL;
   private static $instantiated_pids = array();
   
   
@@ -19,25 +19,26 @@ class Fedora_Item extends PropertyObject {
    *
    * @param string $pid
    * @param FedoraConnection $connection
-   * @return Fedora_Item
+   * @return FedoraItem
    */
-  function __construct($pid, $connection = NULL) {
-    if ($this->connection) {
-      
+  function __construct($pid, $client = NULL) {
+    if ($this->client) {
+      $this->client = $client;
     }
     else {
-      // Make a default connection using Drupal's variables.
+      // Make a default client using Drupal's variables.
+      $this->client = new FedoraClient();
     }
     $this->pid = $pid;
-    if (isset(Fedora_Item::$instantiated_pids[$pid])) {
-      $this->connection =& Fedora_Item::$instantiated_pids[$pid]->connection;
-      $this->objectProfile =& Fedora_Item::$instantiated_pids[$pid]->objectProfile;
-      $this->datastreams =& Fedora_Item::$instantiated_pids[$pid]->datastreams;
-      $datastreams_doc =& Fedora_Item::$instantiated_pids[$pid]->datastreams_list;
+    if (isset(FedoraItem::$instantiated_pids[$pid])) {
+      $this->client =& FedoraItem::$instantiated_pids[$pid]->client;
+      $this->objectProfile =& FedoraItem::$instantiated_pids[$pid]->objectProfile;
+      $this->datastreams =& FedoraItem::$instantiated_pids[$pid]->datastreams;
+      $datastreams_doc =& FedoraItem::$instantiated_pids[$pid]->datastreams_list;
     }
     else { 
       $this->refreshObjectProfile();
-      Fedora_Item::$instantiated_pids[$pid]=&$this;
+      FedoraItem::$instantiated_pids[$pid]=&$this;
     }
   }
  
@@ -58,9 +59,9 @@ class Fedora_Item extends PropertyObject {
    */
   function get_datastreams_list_as_array() {
     
-    $result = fedora_api_listDatastreams($this->pid);
+    $result = $this->client->api->listDatastreams($this->pid);
     if ($result->code != 200) {
-      return NULL;
+      throw new FedoraRestException($result->error);
     }
     $datastreams_doc = new SimpleXMLElement($result->data);
     $ds_list = array();
@@ -136,7 +137,7 @@ class Fedora_Item extends PropertyObject {
   }
   
   private function refreshObjectProfile() {
-    $response = fedora_api_getObjectProfile($this->pid);
+    $response = $this->client->api->getObjectProfile($this->pid);
 
     if ($response->code == 200) {
       $this->objectProfile = new SimpleXMLElement($response->data);
@@ -154,8 +155,8 @@ class Fedora_Item extends PropertyObject {
    * @param type $state One of 'A' for active, 'D' for deleted, or 'I' for inactive 
    * @param type $logMessage 
    */
-  private function modifyObject($label = NULL, $ownerId = NULL, $state = NULL, $logMessage = NULL) {
-    $response = fedora_api_modifyObject($this->pid, $label, $ownerId, $state, $logMessage);
+  public function modifyObject($label = NULL, $ownerId = NULL, $state = NULL, $logMessage = NULL) {
+    $response = $this->client->api->modifyObject($this->pid, $label, $ownerId, $state, $logMessage);
     if ($response->code == 200) {
       $this->refreshObjectProfile();
       return TRUE;
@@ -166,6 +167,6 @@ class Fedora_Item extends PropertyObject {
   }
   
   static function createItem( ) {
-    fedora_api_ingest();
+    $this->client->api->ingest();
   }
 }
