@@ -42,6 +42,9 @@ class FedoraItem extends PropertyObject {
     }
   }
  
+  public function delete() {
+    $this->state = 'D';
+  }
   
   /**
    * Returns an associative array of this object's datastreams. Results look like this:

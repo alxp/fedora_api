@@ -282,6 +282,16 @@ class FedoraAPITestCase extends DrupalWebTestCase {
       $profile_doc = new SimpleXMLElement($profile->data);
       $this->assertEqual($item->ownerId, (string) $profile_doc->objOwnerId, 'Test ownerId property against the raw API call.', 'FedoraItem');
     }
+    
+    // Test deleting an item.
+    try {
+      $item->delete();
+      // Assert that find returns nothing.
+      $this->assert(count($client->findObjects(NULL, "pid=$item->pid state=A")) == 0, "Deleting an object removes it from search results.", 'FedoraItem');
+    }
+    catch (FedoraRestException $e) {
+      $this->fail("Delete item $item->pid. " . $e->getMessage());
+    }
   }
 
   protected function drupalCreateFedoraUser($permissions = array('access comments', 'access content', 'post comments')) {
