@@ -77,6 +77,18 @@ class FedoraDatastream extends PropertyObject {
     return $this->_dsState;
   }
   
+  protected function set_dsState($state) {
+    $state = strtoupper($state);
+    if (!in_array($state, array('A', 'I', 'D'))) {
+      throw new FedoraRestException("State must be one of 'A', 'I', or 'D'");
+    }
+    $resp = $this->parent->client->api->modifyDatastream($this->parent->pid, $this->_dsID, NULL, NULL, NULL, NULL, NULL, $state);
+    if ($resp->code != 200) {
+      throw new FedoraRestException("Unable to set label, $resp->error");
+    }
+    $this->_dsState = $state;
+  }
+  
   protected function get_dsMIME() {
     return $this->_dsMIME;
   }
@@ -91,6 +103,15 @@ class FedoraDatastream extends PropertyObject {
   
   protected function get_dsVersionable() {
     return $this->_dsVersionable;
+  }
+  
+  protected function set_dsVersionable($versionable) {
+    $versionable = $versionable == TRUE ? 'true' : 'false';
+    $resp = $this->parent->client->api->modifyDatastream($this->parent->pid, $this->_dsID, NULL, NULL, NULL, NULL, $versionable);
+    if ($resp->code != 200) {
+      throw new FedoraRestException("Unable to set dsVersionable, $resp->error");
+    }
+    $this->_dsVersionable = $versionable;
   }
   
   protected function get_dsInfoType() {

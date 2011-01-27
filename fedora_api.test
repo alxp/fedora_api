@@ -302,12 +302,14 @@ class FedoraAPITestCase extends DrupalWebTestCase {
     
     
     $ds->dsLabel = "Womp womp.";
+    $ds->dsState = 'I';
     // Check against raw API call
     $ds_info_resp = $client->api->getDatastream($pid, 'DC');
     if ($ds_info_resp->code == 200) {
       $ds_info_xml = $ds_info_resp->data;
       $ds_info_elem = new SimpleXMLElement($ds_info_xml);
-      $this->assertEqual((string) $ds_info_elem->dsLabel, "Womp womp.");
+      $this->assertEqual((string) $ds_info_elem->dsLabel, "Womp womp.", 'Verify dsLabel setter', 'FedoraDatastream');
+      $this->assertEqual((string) $ds_info_elem->dsState, 'I', "Verify dsState setter.", 'FedoraDatastream');
     }
   }
   

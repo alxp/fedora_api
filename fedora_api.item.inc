@@ -50,6 +50,14 @@ class FedoraItem extends PropertyObject {
     $this->client->api->purgeObject($this->pid);
   }
   
+  public function addDataStream($dsID, $file_path = NULL, $ds_string = NULL, $params = array('altIDs' => NULL, 'dsLabel' => NULL, 'dsState' => NULL, 'formatURI' => NULL,
+                                                                                                                                             'checksumType' => NULL, 'checksum' => NULL, 'mimeType' => NULL,
+                                                                                                                                             'logMessage' => NULL)) {
+    $this->client->api->addDatastream($this->pid, $dsID, $controlGroup, $file_path = '', $ds_string = '', $dsLocation = '', $altIDs = '', $dsLabel = '', $dsState = 'A',
+                         $formatURI = '', $checksumType = '', $checksum = '', $mimeType = '',
+                         $logMessage = '');
+  }
+  
   /**
    * Returns an associative array of this object's datastreams. Results look like this:
    *
@@ -120,7 +128,6 @@ class FedoraItem extends PropertyObject {
   
   protected function set_state($state) {
     $this->modifyObject(NULL, NULL, $state);
-
   }
   
   protected function get_pid() {

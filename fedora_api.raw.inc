@@ -494,12 +494,12 @@ class FedoraAPI {
    *     <dsChecksum>none</dsChecksum>
    * </datastreamProfile>
    */
-  public function modifyDatastream($pid, $dsID, $file_path = NULL, $dsLocation = NULL, $altIDs = NULL, $dsLabel = NULL, $versionable = 'true', $dsState = 'A', $formatURI = NULL,
-                            $checksumType = 'DEFAULT', $checksum = NULL, $mimeType = NULL, $logMessage = NULL, $force = 'false', $ignoreContent = 'false') {
+  public function modifyDatastream($pid, $dsID, $file_path = NULL, $dsLocation = NULL, $altIDs = NULL, $dsLabel = NULL, $versionable = NULL, $dsState = NULL, $formatURI = NULL,
+                            $checksumType = NULL, $checksum = NULL, $mimeType = NULL, $logMessage = NULL, $force = NULL, $ignoreContent = NULL) {
     $pid = drupal_encode_path($pid);
-    $dsLabel = drupal_encode_path($dsLabel);
-    $formatURI = drupal_encode_path($formatURI);
-    $logMessage = drupal_encode_path($logMessage);
+    $dsLabel = $dsLabel != NULL ? drupal_encode_path($dsLabel) : $dsLabel;
+    $formatURI = $formatURI != NULL ? drupal_encode_path($formatURI) : $formatURI;
+    $logMessage = $logMessage != NULL ? drupal_encode_path($logMessage) : $logMessage;
 
     $params = NULL;
     $headers = array(
@@ -519,8 +519,9 @@ class FedoraAPI {
     $request = $fedora_url . "/objects/$pid/datastreams/$dsID?";
     $request .= (!empty($dsLocation) ? "dsLocation=$dsLocation&" : '')
              . (!empty($altIDs) ? "altIDs=$altIDs&" : '')
-             . (!empty($dsLabel) ? "dsLabel=$dsLabel&" : '')
+             . ($dsLabel != NULL ? "dsLabel=$dsLabel&" : '')  // dsLabel can be a blank string.
              . (!empty($versionable) ? "versionable=$versionable&" : '')
+             . (!empty($dsState) ? "dsState=$dsState&" : '')
              . (!empty($formatURI) ? "formatURI=$formatURI&" : '')
              . (!empty($checksumType) ? "checksumType=$checksumType&" : '')
              . (!empty($checksum) ? "checksum=$checksum&" : '')
