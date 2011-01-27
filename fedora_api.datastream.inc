@@ -5,12 +5,23 @@ include_once('fedora_api.item.inc');
 class FedoraDatastream extends PropertyObject {
   public $parent = NULL;
   public $dsID = '';
-  private $_construct = FALSE;
   
+  private $_dsLabel;
+  private $_dsVersionID;
+  private $_dsCreateDate;
+  private $_dsState;
+  private $_dsMIME;
+  private $_dsFormatURI;
+  private $_dsSize;
+  private $_dsVersionable;
+  private $_dsInfoType;
+  private $_dsLocation;
+  private $_dsLocatoinType;
+  private $_dsChecksumType;
+  private $_dsChecksum;
   function __construct($parent = NULL, $dsID = NULL) {
-    $this->_construct = TRUE;
     $this->parent = $parent;
-    $this->dsID = $dsID;
+    $this->_dsID = $dsID;
     if (!empty($parent) && !empty($dsID)) {
       $resp = $parent->client->api->getDatastream($parent->pid, $dsID);
       if ($resp->code == 200) {
@@ -23,16 +34,15 @@ class FedoraDatastream extends PropertyObject {
     else {
       throw new FedoraRestException("Unable to create datastream for $dsID. Empty FedoraItem or Datastream ID given..");
     }
-    $this->_construct = FALSE;
   }
   
   protected function get_dsID() {
-    return $this->dsID;
+    return $this->_dsID;
   }
   
   protected function get_content() {
 
-    $resp = $this->parent->client->api->getDatastreamDissemination($this->parent->pid, $this->dsID);
+    $resp = $this->parent->client->api->getDatastreamDissemination($this->parent->pid, $this->_dsID);
     if ($resp->code != 200) {
       throw new FedoraRestException("Error getting datastream contents $dsID . $resp->error");
     }
@@ -44,81 +54,81 @@ class FedoraDatastream extends PropertyObject {
   }
   
   protected function get_dsLabel() {
-    return $this->dsLabel;
+    return $this->_dsLabel;
   }
   
   protected function set_dsLabel($label) {
-    $resp = $this->parent->client->api->modifyDatastream($this->parent->pid, $this->dsID, NULL, NULL, NULL, $label);
+    $resp = $this->parent->client->api->modifyDatastream($this->parent->pid, $this->_dsID, NULL, NULL, NULL, $label);
     if ($resp->code != 200) {
       throw new FedoraRestException("Unable to set label, $resp->error");
     }
-    $this->dsLabel = $label;
+    $this->_dsLabel = $label;
   }
   
   protected function get_dsVersionID() {
-    return $this->dsVersionID;
+    return $this->_dsVersionID;
   }
   
   protected function get_dsCreateDate() {
-    return $this->dsCreateDate;
+    return $this->_dsCreateDate;
   }
   
   protected function get_dsState() {
-    return $this->dsState;
+    return $this->_dsState;
   }
   
   protected function get_dsMIME() {
-    return $this->dsMIME;
+    return $this->_dsMIME;
   }
   
   protected function get_dsFormatURI() {
-    return $this->dsFormatURI;
+    return $this->_dsFormatURI;
   }
   
   protected function get_dsSize() {
-    return $this->dsSize;
+    return $this->_dsSize;
   }
   
   protected function get_dsVersionable() {
-    return $this->dsVersionable;
+    return $this->_dsVersionable;
   }
   
   protected function get_dsInfoType() {
-    return $this->dsInfoType;
+    return $this->_dsInfoType;
   }
   
   protected function get_dsLocation() {
-    return $this->dsLocation;
+    return $this->_dsLocation;
   }
   
   protected function get_dsLocationType() {
-    return $this->dsLocationType;
+    return $this->_dsLocationType;
   }
   
   protected function get_dsChecksumType() {
-    return $this->dsChecksumType;
+    return $this->_dsChecksumType;
   }
   
   protected function get_dsChecksum() {
-    return $this->dsChecksum;
+    return $this->_dsChecksum;
   }
   
   private function _decodeDatastreamXML($xml) {
     $ds_info = new SimpleXMLElement($xml);
-    $this->_construct = TRUE;
-    $this->dsLabel = (string) $ds_info->dsLabel;
-    $this->dsVersionID = (string) $ds_info->dsVersionID;
-    $this->dsCreateDate = new DateTime((string) $ds_info->createdDate);
-    $this->dsState = (string) $ds_info->dsState;
-    $this->dsMIME = (string) $ds_info->dsMIME;
-    $this->dsFormatURI = (string) $ds_info->dsFormatURI;
-    $this->dsSize = (int) (string) $ds_info->dsSize;
-    $this->dsVersionable = (boolean) (string) $ds_info->dsVersionable;
-    $this->dsInfoType = (string) $ds_info->dsInfoType;
-    $this->dsLocation = (string) $ds_info->dsLocation;
-    $this->dsLocationType = (string) $ds_info->dsLocationType;
-    $this->dsChecksumType = (string) $ds_info->dsChecksumType;
-    $this->dsChecksum = (string) $ds_info->dsChecksum;
-    $this->_construct = FALSE;
+    $this->_dsLabel = (string) $ds_info->dsLabel;
+    $this->_dsVersionID = (string) $ds_info->dsVersionID;
+    $this->_dsCreateDate = new DateTime((string) $ds_info->createdDate);
+    $this->_dsState = (string) $ds_info->dsState;
+    $this->_dsMIME = (string) $ds_info->dsMIME;
+    $this->_dsFormatURI = (string) $ds_info->dsFormatURI;
+    $this->_dsSize = (int) (string) $ds_info->dsSize;
+    $this->_dsVersionable = (boolean) (string) $ds_info->dsVersionable;
+    $this->_dsInfoType = (string) $ds_info->dsInfoType;
+    $this->_dsLocation = (string) $ds_info->dsLocation;
+    $this->_dsLocationType = (string) $ds_info->dsLocationType;
+    $this->_dsChecksumType = (string) $ds_info->dsChecksumType;
+    $this->_dsChecksum = (string) $ds_info->dsChecksum;
+
   }
+
 }

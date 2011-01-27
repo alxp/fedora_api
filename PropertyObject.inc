@@ -23,11 +23,10 @@ abstract class PropertyObject {
   }
   
   public function __set($name, $value) {
-    if (method_exists($this, ($method = 'set_'.$name)) && !$this->_construct) {
+    if (method_exists($this, ($method = 'set_'.$name))) {
       $this->$method($value);
     }
     else {
-      // We're creating the object, don't bother with setters.
       $this->$name = $value;
     }
   }
