@@ -206,6 +206,18 @@ class FedoraAPITestCase extends DrupalWebTestCase {
       $this->fail("Ingest object from FOXML string. $resp_foxml_string->error");
     }
     
+    // Test getDatastream
+    if (in_array($foxml_pid, $this->pidslist)) {
+      // Get datastream info about the default DC stream.
+      $resp_ds_info = $api->getDatastream($foxml_pid, 'DC');
+      if ($resp_ds_info->code == 200) {
+        $this->pass('Get datastream info as XML');
+      }
+      else {
+        $this->fail("Get datastream info as XML. $resp_ds_info->error");
+      }      
+    }
+    
   }
   
   public function testFedoraClient() {
@@ -252,6 +264,52 @@ class FedoraAPITestCase extends DrupalWebTestCase {
     }
   }
   
+  public function testFedoraDatastream() {
+    global $base_url;
+    $client = new FedoraClient();
+    module_load_include('inc', 'fedora_api', 'fedora_api.datastream');
+    $pid = $client->ingest();
+    $item = new FedoraItem($pid);
+    
+    // Attempt to get info about the default DC datastream.
+    $this->assertEqual($pid, $item->pid, "Instantiate FedoraItem Object $pid for FedoraDatastream tests", 'FedoraItem');
+    if (!empty($item)) {
+      $this->pidslist[] = $pid;
+    }
+    $ds = new FedoraDatastream($item, 'DC');
+    
+    $this->assertEqual($ds->dsMIME, 'text/xml', "Create FedoraDatastream for $pid/DC and found it to be of type text/xml.", 'FedoraDatastream');
+    try {
+      $content = $ds->content;
+      $this->pass("Get datastream DC contents.", 'FedoraDatastream');
+      // Check that datastream size is equal to what you've received.
+      $this->assertEqual(strlen($content), $ds->dsSize, "Received correct number of bytes for datastream DC, $ds->dsSize", 'FedoraDatastream');
+    }
+    catch (FedoraRestException $e) {
+      $this->fail("Get datastream DC contents. $e", 'FedoraDatastream');
+    }
+    
+    // Check that getting a non-existent datastream throws an exception.
+    try {
+      $ds_fake = new FedoraDatastream($item, "OMGFAKE");
+      $this->fail("Create FedoraDatastream for non-existant datastream throws an exception.", 'FedoraDatastream');
+    }
+    catch (FedoraRestException $e) {
+      $this->pass("Create FedoraDatastream for non-existant datastream throws an exception.", 'FedoraDatastream');
+    }
+    
+    // Test datastream setters and getters.
+    
+    
+    $ds->dsLabel = "Womp womp.";
+    // Check against raw API call
+    $ds_info_resp = $client->api->getDatastream($pid, 'DC');
+    if ($ds_info_resp->code == 200) {
+      $ds_info_xml = $ds_info_resp->data;
+      $ds_info_elem = new SimpleXMLElement($ds_info_xml);
+      $this->assertEqual((string) $ds_info_elem->dsLabel, "Womp womp.");
+    }
+  }
   
   public function testFedoraItem() {
     global $base_url;

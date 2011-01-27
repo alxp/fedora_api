@@ -46,6 +46,10 @@ class FedoraItem extends PropertyObject {
     $this->state = 'D';
   }
   
+  public function purge() {
+    $this->client->api->purgeObject($this->pid);
+  }
+  
   /**
    * Returns an associative array of this object's datastreams. Results look like this:
    *
@@ -138,6 +142,7 @@ class FedoraItem extends PropertyObject {
     }
     return $models;
   }
+  
   
   private function refreshObjectProfile() {
     $response = $this->client->api->getObjectProfile($this->pid);
