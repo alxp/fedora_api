@@ -98,7 +98,9 @@ class FedoraAPITestCase extends DrupalWebTestCase {
 
     $testDSID = $this->randomName(11);
 
-    $data = $api->addDatastream('fedora-system:FedoraObject-3.0', $testDSID, 'M', '', '', $base_url.'/themes/garland/logo.png', '', 'hipig', 'A', '', '', '', 'image/png');
+    $data = $api->addDatastream('fedora-system:FedoraObject-3.0', $testDSID, NULL, NULL,
+            array('controlGroup' => 'M', 'dsLocation' => $base_url.'/themes/garland/logo.png', 
+            'dsLabel' => 'hipig', 'dsState' => 'A', 'mimeType' => 'image/png'));
 
     if ($data->code == 201) {
       $this->pass('Add managed datastream test successful: '.$data->error);
@@ -108,7 +110,8 @@ class FedoraAPITestCase extends DrupalWebTestCase {
     }
 
     $test_file_DSID = $this->randomName(11);
-    $file_add_data = $api->addDatastream('fedora-system:FedoraObject-3.0', $test_file_DSID, 'M', getcwd().'/themes/garland/logo.png', '', '', '', 'hipig', 'A', '', '', '', 'image/png');
+    $file_add_data = $api->addDatastream('fedora-system:FedoraObject-3.0', $test_file_DSID, getcwd().'/themes/garland/logo.png', NULL, 
+            array( 'controlGroup' => 'M', 'dsLabel' => 'hipig', 'dsState' => 'A', 'mimeType' => 'image/png'));
 
     if ($file_add_data->code == 201) {
       $this->pass('Add managed datastream from file test successful: '.$file_add_data->error);

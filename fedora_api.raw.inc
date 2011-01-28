@@ -272,27 +272,33 @@ class FedoraAPI {
    * @todo Please document this function.
    * @see http://drupal.org/node/1354
    */
-  public function addDatastream($pid, $dsID, $controlGroup, $file_path = '', $ds_string = '', $dsLocation = '', $altIDs = '', $dsLabel = '', $dsState = 'A',
-                         $formatURI = '', $checksumType = '', $checksum = '', $mimeType = '',
-                         $logMessage = '') {
+  public function addDatastream($pid, $dsID, $file_path = NULL, $ds_string = NULL,
+                         $params = array('controlGroup' => NULL, 'dsLocation' => NULL, 'altIDs' => NULL, 'dsLabel' => NULL,
+                                                  'dsState' => NULL, 'formatURI' => NULL, 'checksumType' => NULL, 'checksum' => NULL,
+                                                  'mimeType' => NULL, 'logMessage' => NULL)
+          ) {
     // If $file_path is specified ignore dsLocation.
     //$headers = array('Content-Type' => 'multipart/form-data');
     $pid = drupal_encode_path($pid);
-    $dsLabel = drupal_encode_path($dsLabel);
+    
+    foreach (array('dsLabel', 'formatURI', 'logMessage') as $string_param) {
+      if (key_exists($string_param, $params) && $params[$string_param] != NULL) {
+        $params[$string_param] = drupal_encode_path($params[$string_param]);
+      }
+    }
+    
     //$dsLocation = drupal_urlencode($dsLocation);
-    $formatURI = drupal_encode_path($formatURI);
-    $logMessage = drupal_encode_path($logMessage);
 
-    $params = NULL;
+    $request_params = NULL;
 
     $headers = array(); //'Keep-Alive' => 115,
     // 'Connection' => 'keep-alive');
-    if (!empty($dsLocation)) {
-      if ($controlGroup == 'X') {
+    if (!empty($params['dsLocation'])) {
+      if ($params['controlGroup'] == 'X') {
         $headers['Content-Type'] = 'text/xml';
       }
-      elseif (!empty($mimeType)) {
-        $headers['Content-Type'] = $mimeType;
+      elseif (!empty($params['mimeType'])) {
+        $headers['Content-Type'] = $params['mimeType'];
       }
       else {
         // TODO: More sophisticated MIME type detection. Possibly including retrieving headers of $dsLocation
@@ -303,13 +309,13 @@ class FedoraAPI {
       // We must construct a multipart HTTP POST.
       $boundary = 'A0sFSD';
       $headers["Content-Type"] = "multipart/form-data; boundary=$boundary";
-      $params = _fedora_api_multipart_encode($boundary, array('file' => $file_path));
+      $request_params = _fedora_api_multipart_encode($boundary, array('file' => $file_path));
     }
     elseif (!empty($ds_string)) {
       // We must construct a multipart HTTP POST.
       $boundary = 'A0sFSD';
       $headers["Content-Type"] = "multipart/form-data; boundary=$boundary";
-      $params = _fedora_api_multipart_encode($boundary, array('string' => $ds_string));
+      $request_params = _fedora_api_multipart_encode($boundary, array('string' => $ds_string));
     }
     else {
       return NULL;
@@ -317,18 +323,10 @@ class FedoraAPI {
 
     $fedora_url = $this->connection->requestURL(); 
     $request = $fedora_url . "/objects/$pid/datastreams/$dsID?";
-
-    $request .= (!empty($controlGroup) ? "controlGroup=$controlGroup&" : '')
-             . (!empty($dsLocation) ? "dsLocation=$dsLocation&" : '')
-             . (!empty($altIDs) ? "altIDs=$altIDs&" : '')
-             . (!empty($dsLabel) ? "dsLabel=$dsLabel&" : '')
-             . (!empty($dsState) ? "dsState=$dsState&" : '')
-             . (!empty($formatURI) ? "formatURI=$formatURI&" : '')
-             . (!empty($checksumType) ? "checksumType=$checksumType&" : '')
-             . (!empty($checksum) ? "checksum=$checksum&" : '')
-             . (!empty($mimeType) ? "mimeType=$mimeType&" : '')
-             . (!empty($logMessage) ? "logMessage=$logMessage" : '');
-    $response = drupal_http_request($request, array('headers' => $headers, 'method' => 'POST', 'data' => $params));
+    foreach ($params as $param_name => $param_value) {
+      $request .= $param_value != NULL ? "$param_name=$param_value&" : '';
+    }
+    $response = drupal_http_request($request, array('headers' => $headers, 'method' => 'POST', 'data' => $request_params));
 
     return $response;
   }
