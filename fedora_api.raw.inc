@@ -301,7 +301,7 @@ class FedoraAPI {
         $headers['Content-Type'] = $params['mimeType'];
       }
       else {
-        // TODO: More sophisticated MIME type detection. Possibly including retrieving headers of $dsLocation
+        // TODO: More sophisticated MIME type detection. Possibly including retrieving headers of dsLocation
         $headers['Content-Type'] = 'application/x-octet-stream';
       }
     }
