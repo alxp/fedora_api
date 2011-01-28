@@ -8,6 +8,7 @@ core = 7.x
 files[] = FedoraRestException.php
 files[] = fedora_api.client.inc
 files[] = fedora_api.connection.inc
+files[] = fedora_api.datastream.inc
 files[] = fedora_api.item.inc
 files[] = fedora_api.module
 files[] = fedora_api.raw.inc
