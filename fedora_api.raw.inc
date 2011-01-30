@@ -277,8 +277,6 @@ class FedoraAPI {
                                                   'dsState' => NULL, 'formatURI' => NULL, 'checksumType' => NULL, 'checksum' => NULL,
                                                   'mimeType' => NULL, 'logMessage' => NULL)
           ) {
-    // If $file_path is specified ignore dsLocation.
-    //$headers = array('Content-Type' => 'multipart/form-data');
     $pid = drupal_encode_path($pid);
     
     foreach (array('dsLabel', 'formatURI', 'logMessage') as $string_param) {
@@ -287,8 +285,6 @@ class FedoraAPI {
       }
     }
     
-    //$dsLocation = drupal_urlencode($dsLocation);
-
     $request_params = NULL;
 
     $headers = array(); //'Keep-Alive' => 115,
@@ -492,42 +488,33 @@ class FedoraAPI {
    *     <dsChecksum>none</dsChecksum>
    * </datastreamProfile>
    */
-  public function modifyDatastream($pid, $dsID, $file_path = NULL, $dsLocation = NULL, $altIDs = NULL, $dsLabel = NULL, $versionable = NULL, $dsState = NULL, $formatURI = NULL,
-                            $checksumType = NULL, $checksum = NULL, $mimeType = NULL, $logMessage = NULL, $force = NULL, $ignoreContent = NULL) {
+  public function modifyDatastream($pid, $dsID, $file_path = NULL, 
+                            $params = array('dsLocation' => NULL, 'altIDs' => NULL, 'dsLabel' => NULL, 'versionable' => NULL, 'dsState' => NULL, 'formatURI' => NULL,
+                                'checksumType' => NULL, 'checksum' => NULL, 'mimeType' => NULL, 'logMessage' => NULL, 'force' => NULL, 'ignoreContent' => NULL))  {
     $pid = drupal_encode_path($pid);
-    $dsLabel = $dsLabel != NULL ? drupal_encode_path($dsLabel) : $dsLabel;
-    $formatURI = $formatURI != NULL ? drupal_encode_path($formatURI) : $formatURI;
-    $logMessage = $logMessage != NULL ? drupal_encode_path($logMessage) : $logMessage;
-
-    $params = NULL;
-    $headers = array(
-      'Keep-Alive' => 115,
-      'Connection' => 'keep-alive',
-    );
-
-    if (!empty($file_path)) {
-      // We must construct a multipart HTTP POST.
-      $boundary = 'A0sFSD';
-      $headers["Content-Type"] = "multipart/form-data; boundary=$boundary";
-      $params = _fedora_api_multipart_encode($boundary, array('file' => $file_path));
+      
+    foreach (array('dsLabel', 'formatURI', 'logMessage') as $string_param) {
+      if (key_exists($string_param, $params) && $params[$string_param] != NULL) {
+        $params[$string_param] = drupal_encode_path($params[$string_param]);
+      }
     }
+    
+    $request_params = NULL;
+    $headers = array(
+   //   'Keep-Alive' => 115,
+   //   'Connection' => 'keep-alive',
+    );
 
     $fedora_url = $this->connection->requestURL(); 
 
     $request = $fedora_url . "/objects/$pid/datastreams/$dsID?";
-    $request .= (!empty($dsLocation) ? "dsLocation=$dsLocation&" : '')
-             . (!empty($altIDs) ? "altIDs=$altIDs&" : '')
-             . ($dsLabel != NULL ? "dsLabel=$dsLabel&" : '')  // dsLabel can be a blank string.
-             . (!empty($versionable) ? "versionable=$versionable&" : '')
-             . (!empty($dsState) ? "dsState=$dsState&" : '')
-             . (!empty($formatURI) ? "formatURI=$formatURI&" : '')
-             . (!empty($checksumType) ? "checksumType=$checksumType&" : '')
-             . (!empty($checksum) ? "checksum=$checksum&" : '')
-             . (!empty($mimeType) ? "mimeType=$mimeType&" : '')
-             . (!empty($logMessage) ? "logMessage=$logMessage&" : '')
-             . (!empty($force) ? "force=$force&" : '')
-             . (!empty($ignoreContent) ? "ignoreContent=$ignoreContent" : '');
-    $response = drupal_http_request($request, array('headers' => $headers, 'method' => 'PUT', 'data' => $params));
+    
+    foreach ($params as $param_name => $param_value) {
+      $request .= $param_value != NULL ? "$param_name=$param_value&" : '';
+    }
+    
+    $data = (!empty($file_path) ? file_get_contents($file_path) : NULL);
+    $response = drupal_http_request($request, array('headers' => $headers, 'method' => 'PUT', 'data' => $data));
     return $response;
   }
 

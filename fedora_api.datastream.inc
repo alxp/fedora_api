@@ -19,10 +19,11 @@ class FedoraDatastream extends PropertyObject {
   private $_dsLocatoinType;
   private $_dsChecksumType;
   private $_dsChecksum;
+  
   function __construct($parent = NULL, $dsID = NULL) {
     $this->parent = $parent;
     $this->_dsID = $dsID;
-    if (!empty($parent) && !empty($dsID)) {
+     if (!empty($parent) && !empty($dsID)) {
       $resp = $parent->client->api->getDatastream($parent->pid, $dsID);
       if ($resp->code == 200) {
         $this->_decodeDatastreamXML($resp->data);
@@ -58,7 +59,7 @@ class FedoraDatastream extends PropertyObject {
   }
   
   protected function set_dsLabel($label) {
-    $resp = $this->parent->client->api->modifyDatastream($this->parent->pid, $this->_dsID, NULL, NULL, NULL, $label);
+    $resp = $this->parent->client->api->modifyDatastream($this->parent->pid, $this->_dsID, NULL, array('dsLabel' => $label));
     if ($resp->code != 200) {
       throw new FedoraRestException("Unable to set label, $resp->error");
     }
@@ -82,7 +83,7 @@ class FedoraDatastream extends PropertyObject {
     if (!in_array($state, array('A', 'I', 'D'))) {
       throw new FedoraRestException("State must be one of 'A', 'I', or 'D'");
     }
-    $resp = $this->parent->client->api->modifyDatastream($this->parent->pid, $this->_dsID, NULL, NULL, NULL, NULL, NULL, $state);
+    $resp = $this->parent->client->api->modifyDatastream($this->parent->pid, $this->_dsID, NULL, array('dsState' => $state));
     if ($resp->code != 200) {
       throw new FedoraRestException("Unable to set label, $resp->error");
     }
@@ -107,7 +108,7 @@ class FedoraDatastream extends PropertyObject {
   
   protected function set_dsVersionable($versionable) {
     $versionable = $versionable == TRUE ? 'true' : 'false';
-    $resp = $this->parent->client->api->modifyDatastream($this->parent->pid, $this->_dsID, NULL, NULL, NULL, NULL, $versionable);
+    $resp = $this->parent->client->api->modifyDatastream($this->parent->pid, $this->_dsID, NULL, array('versionable' => $versionable));
     if ($resp->code != 200) {
       throw new FedoraRestException("Unable to set dsVersionable, $resp->error");
     }
