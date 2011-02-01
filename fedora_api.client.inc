@@ -9,7 +9,7 @@ require_once('FedoraRestException.php');
 class FedoraClient {
   
   public $connection;
-  
+  protected $_populated = FALSE;
   function __construct($connection = NULL) {
     if (empty($connection)) {
       $connection = new FedoraConnection();

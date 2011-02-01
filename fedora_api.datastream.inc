@@ -3,9 +3,9 @@
 include_once('fedora_api.item.inc');
 
 class FedoraDatastream extends PropertyObject {
-  public $parent = NULL;
+  private $_parent = NULL;
   public $dsID = '';
-  
+  //protected $_populated = FALSE; // If the getDatastream call has been made to populate this object's fields
   private $_dsLabel;
   private $_dsVersionID;
   private $_dsCreateDate;
@@ -20,23 +20,27 @@ class FedoraDatastream extends PropertyObject {
   private $_dsChecksumType;
   private $_dsChecksum;
   
-  function __construct($parent = NULL, $dsID = NULL) {
-    $this->parent = $parent;
+  /**
+   *
+   * @param type $parent FedoraItem that this item is a part of
+   * @param type $dsID The Datastreams DSID
+   * @param type $label Datastream's label, if creating a minimal datastream
+   * @param type $mimeType The Datastream's MIME Type, if creating a minimal datastream
+   */
+  function __construct($parent, $dsID, $label = NULL, $mimeType = NULL) {
+    $this->_parent = $parent;
     $this->_dsID = $dsID;
-     if (!empty($parent) && !empty($dsID)) {
-      $resp = $parent->client->api->getDatastream($parent->pid, $dsID);
-      if ($resp->code == 200) {
-        $this->_decodeDatastreamXML($resp->data);
-      }
-      else {
-        throw new FedoraRestException("Unable to create datastream for $dsID. $resp->error.");
-      }
+    $this->_populated = FALSE;
+     if ($label == NULL && $mimeType == NULL) {
+       $this->_refresh();
     }
     else {
-      throw new FedoraRestException("Unable to create datastream for $dsID. Empty FedoraItem or Datastream ID given..");
+      // Create a minimal datastream. Getters may invoke getDatastreamInfo to access other fields.
+      $this->_dsLabel = $label;
+      $this->_dsMIME = $mimeType;
     }
   }
-  
+
   protected function get_dsID() {
     return $this->_dsID;
   }
@@ -67,6 +71,7 @@ class FedoraDatastream extends PropertyObject {
   }
   
   protected function get_dsVersionID() {
+    
     return $this->_dsVersionID;
   }
   
@@ -135,6 +140,10 @@ class FedoraDatastream extends PropertyObject {
     return $this->_dsChecksum;
   }
   
+  protected function get_parent() {
+    return $this->_parent;
+  }
+  
   private function _decodeDatastreamXML($xml) {
     $ds_info = new SimpleXMLElement($xml);
     $this->_dsLabel = (string) $ds_info->dsLabel;
@@ -150,7 +159,19 @@ class FedoraDatastream extends PropertyObject {
     $this->_dsLocationType = (string) $ds_info->dsLocationType;
     $this->_dsChecksumType = (string) $ds_info->dsChecksumType;
     $this->_dsChecksum = (string) $ds_info->dsChecksum;
-
   }
 
+  /**
+   * Call out to Fedora to populate this Datastream object's fields.
+   */
+  protected function _refresh() {
+    $resp = $this->_parent->client->api->getDatastream($this->_parent->pid, $this->_dsID);
+    if ($resp->code == 200) {
+      $this->_decodeDatastreamXML($resp->data);
+      $this->_populated = TRUE;
+    }
+    else {
+      throw new FedoraRestException("Unable to create datastream for $this->_dsID. $resp->error.");
+    }
+  }  
 }

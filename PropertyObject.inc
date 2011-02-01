@@ -7,8 +7,16 @@
  */
 abstract class PropertyObject {
   private $_construct = FALSE;
+  protected $_populated = TRUE;
+  protected function _refresh() {
+    
+  }
   
   public function __get($name) {
+    $var_name = "_$name";
+    if ((!property_exists($this, $var_name) || $this->$var_name == NULL) && !$this->_populated) {
+      $this->_refresh();
+    }
     if (method_exists($this, ($method = 'get_'.$name))) {
       return $this->$method();
     }
