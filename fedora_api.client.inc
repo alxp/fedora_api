@@ -1,6 +1,7 @@
 <?php
 
 require_once('fedora_api.raw.inc');
+require_once('fedora_api.item.inc');
 require_once('FedoraRestException.php');
 /**
  * Wrapper for Fedora Commons API functions that don't operate on existing objects.
@@ -23,7 +24,7 @@ class FedoraClient {
    * @param string $foxml_file
    * @param string $foxml_string
    * @param array $options
-   * @return string The PID of the newly created object. 
+   * @return FedoraItem the newly-created item.
    */
   function ingest($foxml_file = NULL, $foxml_string = NULL, 
           $options = array('pid' => NULL, 'new' => NULL, 'label' => NULL, 'format' => NULL, 'encoding' => NULL,
@@ -38,7 +39,8 @@ class FedoraClient {
     if ($response->code != 201) {
       throw new FedoraRestException($response->error);
     }
-    return $response->data;
+    return new FedoraItem($response->data);
+    
   }
   
   /**

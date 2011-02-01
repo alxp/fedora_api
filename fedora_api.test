@@ -98,8 +98,8 @@ class FedoraAPITestCase extends DrupalWebTestCase {
 
     $testDSID = $this->randomName(11);
     $new_item = $client->ingest();
-    $this->pidslist[] = $new_item;
-    $data = $api->addDatastream($new_item, $testDSID, NULL, NULL,
+    $this->pidslist[] = $new_item->pid;
+    $data = $api->addDatastream($new_item->pid, $testDSID, NULL, NULL,
         array('controlGroup' => 'M', 'dsLocation' => $base_url.'/themes/garland/logo.png', 
         'dsLabel' => 'hipig', 'dsState' => 'A', 'mimeType' => 'image/png'));
 
@@ -111,7 +111,7 @@ class FedoraAPITestCase extends DrupalWebTestCase {
     }
 
     $test_file_DSID = $this->randomName(11);
-    $file_add_data = $api->addDatastream($new_item, $test_file_DSID, getcwd().'/themes/garland/logo.png', NULL, 
+    $file_add_data = $api->addDatastream($new_item->pid, $test_file_DSID, getcwd().'/themes/garland/logo.png', NULL, 
             array( 'controlGroup' => 'M', 'dsLabel' => 'hipig', 'dsState' => 'A', 'mimeType' => 'image/png'));
 
     if ($file_add_data->code == 201) {
@@ -122,7 +122,7 @@ class FedoraAPITestCase extends DrupalWebTestCase {
     }
 
     // Now try and modify that datastream and replace its contents with another image.
-    $file_modify_data = $api->modifyDatastream($new_item, $test_file_DSID, drupal_get_path('module', 'fedora_api').'/test_data/test.png', 
+    $file_modify_data = $api->modifyDatastream($new_item->pid, $test_file_DSID, drupal_get_path('module', 'fedora_api').'/test_data/test.png', 
     array('mimeType' => 'image/png'));
     if ($file_modify_data->code == 200) {
       $this->pass('Modify managed datastream from file: ');
@@ -131,7 +131,7 @@ class FedoraAPITestCase extends DrupalWebTestCase {
       $this->fail('Modify managed datastream from file: '.$file_modify_data->error);
     }
     
-    $test_export = $api->export($new_item);
+    $test_export = $api->export($new_item->pid);
     if (empty($test_export->error)) {
       if (strpos($test_export->data, 'foxml:digitalObject') >= 0) {
         $this->pass("Successfully exported FOXML.");
@@ -157,7 +157,7 @@ class FedoraAPITestCase extends DrupalWebTestCase {
       $this->fail('Problem executing drupal_http_request for getNextPID: '.$test_nextPID->error);
     }
 
-    $test_objectXML = $api->getObjectXML($new_item);
+    $test_objectXML = $api->getObjectXML($new_item->pid);
     if (empty($test_objectXML->error)) {
       if (strpos($test_objectXML->data, 'foxml:digitalObject') >= 0) {
         $this->pass('Successfully called getObjectXML.');
@@ -240,16 +240,17 @@ class FedoraAPITestCase extends DrupalWebTestCase {
     $client = new FedoraClient();
     
     try {
-      $blank_pid = $client->ingest();
-      $this->pass("Ingest blank object $blank_pid", 'FedoraClient');
-      $this->pidslist[] = $blank_pid;
-    } catch (HttpException $e) {
+      $blank_item = $client->ingest();
+      $this->pass("Ingest blank object $blank_item->pid", 'FedoraClient');
+      $this->pidslist[] = $blank_item->pid;
+    }
+    catch (HttpException $e) {
       $this->fail("Ingest blank object ".$e->getMessage(), 'FedoraClient');
     }
     // Attempt to ingest new object with existing pid, should raise an exception.
-    if (!empty($blank_pid)) {
+    if (!empty($blank_item)) {
       try {
-        $double_pid = $client->ingest(NULL, NULL, array('pid' => $blank_pid));
+        $double_item = $client->ingest(NULL, NULL, array('pid' => $blank_item->pid));
         $this->fail('Ingest with existing PID raises FedoraRest Exception', 'FedoraClient');
       }
       catch (FedoraRestException $e) {
@@ -267,13 +268,13 @@ class FedoraAPITestCase extends DrupalWebTestCase {
     }
     
     // Test findObjects for a single, specific object.
-    if (!empty($blank_pid)) {
+    if (!empty($blank_item->pid)) {
       try {
-        $resultset_query = $client->findObjects(NULL, "pid=$blank_pid");
-        $this->pass("Find object with pid $blank_pid.", 'FedoraClient');
+        $resultset_query = $client->findObjects(NULL, "pid=$blank_item->pid");
+        $this->pass("Find object with pid $blank_item->pid.", 'FedoraClient');
       }
       catch (FedoraRestException $e) {
-        $this->fail("Find object with pid $blank_pid. " . $e->getMessage(), 'FedoraClient');
+        $this->fail("Find object with pid $blank_item->pid. " . $e->getMessage(), 'FedoraClient');
       }
     }
   }
@@ -282,17 +283,17 @@ class FedoraAPITestCase extends DrupalWebTestCase {
     global $base_url;
     $client = new FedoraClient();
     module_load_include('inc', 'fedora_api', 'fedora_api.datastream');
-    $pid = $client->ingest();
-    $item = new FedoraItem($pid);
+    $item = $client->ingest();
+    
     
     // Attempt to get info about the default DC datastream.
-    $this->assertEqual($pid, $item->pid, "Instantiate FedoraItem Object $pid for FedoraDatastream tests", 'FedoraItem');
+    $this->assertEqual($item->pid, $item->pid, "Instantiate FedoraItem Object $item->pid for FedoraDatastream tests", 'FedoraItem');
     if (!empty($item)) {
-      $this->pidslist[] = $pid;
+      $this->pidslist[] = $item->pid;
     }
     $ds = new FedoraDatastream($item, 'DC');
     
-    $this->assertEqual($ds->dsMIME, 'text/xml', "Create FedoraDatastream for $pid/DC and found it to be of type text/xml.", 'FedoraDatastream');
+    $this->assertEqual($ds->dsMIME, 'text/xml', "Create FedoraDatastream for $item->pid/DC and found it to be of type text/xml.", 'FedoraDatastream');
     try {
       $content = $ds->content;
       $this->pass("Get datastream DC contents.", 'FedoraDatastream');
@@ -318,7 +319,7 @@ class FedoraAPITestCase extends DrupalWebTestCase {
     $ds->dsLabel = "Womp womp.";
     $ds->dsState = 'I';
     // Check against raw API call
-    $ds_info_resp = $client->api->getDatastream($pid, 'DC');
+    $ds_info_resp = $client->api->getDatastream($item->pid, 'DC');
     if ($ds_info_resp->code == 200) {
       $ds_info_xml = $ds_info_resp->data;
       $ds_info_elem = new SimpleXMLElement($ds_info_xml);
@@ -331,15 +332,14 @@ class FedoraAPITestCase extends DrupalWebTestCase {
     global $base_url;
     
     $client = new FedoraClient();
-    $pid = $client->ingest();
-    $this->pidslist[] = $pid;
-    $item = new FedoraItem($pid);
-    $this->assertEqual($pid, $item->pid, "Instantiate FedoraItem Object $pid", 'FedoraItem');
+    $item = $client->ingest();
+    $this->pidslist[] = $item->pid;
+    $this->assertEqual($item->pid, $item->pid, "Instantiate FedoraItem Object $item->pid", 'FedoraItem');
     $new_label = "The answer is: Moops.";
     $item->label = $new_label;
     $this->assertEqual($item->label, $new_label, "Test set label property.", 'FedoraItem');
     // Assert against the output of the raw API call to make sure the label really changed.
-    $profile = $client->api->getObjectProfile($pid);
+    $profile = $client->api->getObjectProfile($item->pid);
     if ($profile->code == 200) {
       $profile_doc = new SimpleXMLElement($profile->data);
       $this->assertEqual($item->label, (string) $profile_doc->objLabel, 'Test label property against the raw API call.', 'FedoraItem');
@@ -351,7 +351,7 @@ class FedoraAPITestCase extends DrupalWebTestCase {
     $this->assertEqual($item->ownerId, $new_ownerId, "Test set ownerId property.", 'FedoraItem');
     
     // Assert against the output of the raw API call to make sure the ownerId really changed.
-    $profile = $client->api->getObjectProfile($pid);
+    $profile = $client->api->getObjectProfile($item->pid);
     if ($profile->code == 200) {
       $profile_doc = new SimpleXMLElement($profile->data);
       $this->assertEqual($item->ownerId, (string) $profile_doc->objOwnerId, 'Test ownerId property against the raw API call.', 'FedoraItem');
