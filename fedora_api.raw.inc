@@ -489,7 +489,7 @@ class FedoraAPI {
    *     <dsChecksum>none</dsChecksum>
    * </datastreamProfile>
    */
-  public function modifyDatastream($pid, $dsID, $file_path = NULL, 
+  public function modifyDatastream($pid, $dsID, $file_path = NULL, $ds_string = NULL,
                             $params = array('dsLocation' => NULL, 'altIDs' => NULL, 'dsLabel' => NULL, 'versionable' => NULL, 'dsState' => NULL, 'formatURI' => NULL,
                                 'checksumType' => NULL, 'checksum' => NULL, 'mimeType' => NULL, 'logMessage' => NULL, 'force' => NULL, 'ignoreContent' => NULL))  {
     $pid = drupal_encode_path($pid);
@@ -514,7 +514,7 @@ class FedoraAPI {
       $request .= $param_value != NULL ? "$param_name=$param_value&" : '';
     }
     
-    $data = (!empty($file_path) ? file_get_contents($file_path) : NULL);
+    $data = (!empty($file_path) ? file_get_contents($file_path) : $ds_string);
     $response = drupal_http_request($request, array('headers' => $headers, 'method' => 'PUT', 'data' => $data));
     return $response;
   }

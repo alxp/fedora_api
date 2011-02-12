@@ -122,8 +122,8 @@ class FedoraAPITestCase extends DrupalWebTestCase {
     }
 
     // Now try and modify that datastream and replace its contents with another image.
-    $file_modify_data = $api->modifyDatastream($new_item->pid, $test_file_DSID, drupal_get_path('module', 'fedora_api').'/test_data/test.png', 
-    array('mimeType' => 'image/png'));
+    $file_modify_data = $api->modifyDatastream($new_item->pid, $test_file_DSID, drupal_get_path('module', 'fedora_api').'/test_data/test.png', NULL,
+            array('mimeType' => 'image/png'));
     if ($file_modify_data->code == 200) {
       $this->pass('Modify managed datastream from file: ');
     }
@@ -303,7 +303,13 @@ class FedoraAPITestCase extends DrupalWebTestCase {
     catch (FedoraRestException $e) {
       $this->fail("Get datastream DC contents. $e", 'FedoraDatastream');
     }
-    
+    try {
+      $ds->content = $this->randomString(255);
+      $this->fail("Set XML datastream content to invalid XML raises exception.", "FedoraDatastream");
+    }
+    catch (FedoraRestException $e) {
+      $this->pass("Set XML datastream content to invalid XML raises exception.", "FedoraDatastream");
+    }
     // Check that getting a non-existent datastream throws an exception.
     try {
       $ds_fake = new FedoraDatastream($item, "OMGFAKE");
@@ -357,6 +363,19 @@ class FedoraAPITestCase extends DrupalWebTestCase {
       $this->assertEqual($item->ownerId, (string) $profile_doc->objOwnerId, 'Test ownerId property against the raw API call.', 'FedoraItem');
     }
     
+    // Test adding a datastream
+    try {
+      $add_ds_id = "TXTXTXT";
+      $add_ds_content = "Hello, world!";
+      $ds = $item->addDatastream($add_ds_id, NULL, $add_ds_content, array('mimeType' => 'text/plain', 'controlGroup' => 'M'));
+      
+      $this->assertEqual($item->datastreams[$add_ds_id], $ds, "Add datastream on FedoraItem object");
+      $this->assertEqual($item->datastreams[$add_ds_id]->content, $add_ds_content, "Add datastream on FedoraItem object content matches.");
+    }
+    catch (FedoraRestException $e) {
+      $this->fail("Add datastream on FedoraItem object." . $e->getMessage());
+    }
+    
     // Test deleting an item.
     try {
       $item->delete();
@@ -366,6 +385,8 @@ class FedoraAPITestCase extends DrupalWebTestCase {
     catch (FedoraRestException $e) {
       $this->fail("Delete item $item->pid. " . $e->getMessage());
     }
+    
+   
   }
 
   protected function drupalCreateFedoraUser($permissions = array('access comments', 'access content', 'post comments')) {
