@@ -8,7 +8,7 @@ require_once('PropertyObject.inc');
 class FedoraItem extends PropertyObject {
   public $pid = NULL; // The $pid of the fedora object represented by an instance of this class.
   private $objectProfile = NULL;
-  public $datastreams = NULL;
+  private $_datastreams = NULL;
   public $client = NULL;
   private static $instantiated_pids = array();
   
@@ -33,11 +33,11 @@ class FedoraItem extends PropertyObject {
     if (isset(FedoraItem::$instantiated_pids[$pid])) {
       $this->client =& FedoraItem::$instantiated_pids[$pid]->client;
       $this->objectProfile =& FedoraItem::$instantiated_pids[$pid]->objectProfile;
-      $this->datastreams =& FedoraItem::$instantiated_pids[$pid]->datastreams;
+      $this->_datastreams =& FedoraItem::$instantiated_pids[$pid]->_datastreams;
       $datastreams_doc =& FedoraItem::$instantiated_pids[$pid]->datastreams_list;
     }
     else { 
-      $this->refreshObjectProfile();
+      $this->_refreshObjectProfile();
       FedoraItem::$instantiated_pids[$pid]=&$this;
     }
   }
@@ -50,13 +50,23 @@ class FedoraItem extends PropertyObject {
     $this->client->api->purgeObject($this->pid);
   }
   
-  public function addDataStream($dsID, $file_path = NULL, $ds_string = NULL, $params = array('altIDs' => NULL, 'dsLabel' => NULL, 'dsState' => NULL, 'formatURI' => NULL,
+  /**
+   * Add a new datastream.  Wrapper for the addDatastream Fedora API-M method.
+   * @param type $dsID
+   * @param string $file_path
+   * @param string $ds_string
+   * @param type $params 
+   */
+  public function addDatastream($dsID, $file_path = NULL, $ds_string = NULL, $params = array('altIDs' => NULL, 'dsLabel' => NULL, 'dsState' => NULL, 'formatURI' => NULL,
                                                                                                                                              'checksumType' => NULL, 'checksum' => NULL, 'mimeType' => NULL,
                                                                                                                                              'logMessage' => NULL)) {
     
-    $this->client->api->addDatastream($this->pid, $dsID, $controlGroup, $file_path = '', $ds_string = '', $dsLocation = '', $altIDs = '', $dsLabel = '', $dsState = 'A',
-                         $formatURI = '', $checksumType = '', $checksum = '', $mimeType = '',
-                         $logMessage = '');
+    $response = $this->client->api->addDatastream($this->pid, $dsID, $file_path, $ds_string, $params);
+    if ($response->code != 201) {
+      throw new FedoraRestException($response->error);
+    }
+    $this->_refreshDatastreams();
+    return $this->datastreams[$dsID];
   }
   
   /**
@@ -73,7 +83,11 @@ class FedoraItem extends PropertyObject {
    *
    * @return array
    */
-  function get_datastreams_list_as_array() {
+  function get_datastreams() {
+    
+    if ($this->_datastreams != NULL) {
+      return $this->_datastreams;
+    }
     
     $result = $this->client->api->listDatastreams($this->pid);
     if ($result->code != 200) {
@@ -97,13 +111,14 @@ class FedoraItem extends PropertyObject {
               break;
           }
         }
-        if (!empty($dsid) && !empty($dsmime) && $dslabel != NULL) {
-          $ds_list[$dsid] = array();
-          $ds_list[$dsid]['label'] = $dslabel;
-          $ds_list[$dsid]['mimeType'] = $dsmime;
+        
+        if (!empty($dsid) && !empty($dsmime) && $dslabel !== NULL) {
+          $ds_list[$dsid] = new FedoraDatastream($this, $dsid, $dslabel, $dsmime);
         }
       }
     }
+    
+    $this->_datastreams = $ds_list;
     return $ds_list;
   }
   
@@ -151,16 +166,19 @@ class FedoraItem extends PropertyObject {
     return $models;
   }
   
+  private function _refreshDatastreams() {
+    $this->_datastreams = NULL;
+  }
   
-  private function refreshObjectProfile() {
+  private function _refreshObjectProfile() {
     $response = $this->client->api->getObjectProfile($this->pid);
 
     if ($response->code == 200) {
       $this->objectProfile = new SimpleXMLElement($response->data);
-      $this->datastreams = $this->get_datastreams_list_as_array();
+      $this->_datastreams = $this->get_datastreams();
     } else {
       $this->objectProfile = '';
-      $this->datastreams = array();
+      $this->_datastreams = array();
     }
   }
   
@@ -174,7 +192,7 @@ class FedoraItem extends PropertyObject {
   public function modifyObject($label = NULL, $ownerId = NULL, $state = NULL, $logMessage = NULL) {
     $response = $this->client->api->modifyObject($this->pid, $label, $ownerId, $state, $logMessage);
     if ($response->code == 200) {
-      $this->refreshObjectProfile();
+      $this->_refreshObjectProfile();
       return TRUE;
     }
     else {

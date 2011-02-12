@@ -310,8 +310,9 @@ class FedoraAPI {
     elseif (!empty($ds_string)) {
       // We must construct a multipart HTTP POST.
       $boundary = 'A0sFSD';
-      $headers["Content-Type"] = "multipart/form-data; boundary=$boundary";
-      $request_params = _fedora_api_multipart_encode($boundary, array('string' => $ds_string));
+      $headers["Content-Type"] = "text/plain";
+      $request_params = $ds_string;
+      //$request_params = _fedora_api_multipart_encode($boundary, array('string' => $ds_string));
     }
     else {
       return NULL;
@@ -649,5 +650,11 @@ function _fedora_api_multipart_enc_xml_string($xml_data) {
 }
 
 function _fedora_api_multipart_enc_text($name, $value) {
+  $mimeType = 'text/plain';
+  $data = "Content-Disposition: form-data: name=\"$name\" filename=\"$name\"\r\n";
+  $data .= "Content-Transfer-Encoding: UTF-8\r\n";
+  $data .= "Content-Type: $mimeType\r\n\r\n";
+  $data .= "$value\r\n";
+  return $data;
   return "Content-Disposition: form-data; name=\"$name\"\r\n\r\n$value\r\n";
 }
