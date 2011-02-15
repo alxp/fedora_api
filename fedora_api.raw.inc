@@ -319,7 +319,7 @@ class FedoraAPI {
     }
 
     $fedora_url = $this->connection->requestURL(); 
-    $request = $fedora_url . "/objects/$pid/datastreams/$dsID?";
+    $request = "$fedora_url/objects/$pid/datastreams/$dsID?";
     foreach ($params as $param_name => $param_value) {
       $request .= $param_value != NULL ? "$param_name=$param_value&" : '';
     }
@@ -344,7 +344,7 @@ class FedoraAPI {
     $format = drupal_encode_path($format);
 
     $fedora_url = $this->connection->requestURL(); 
-    $request = $fedora_url . "/objects/$pid/export?";
+    $request = "$fedora_url/objects/$pid/export?";
 
     $request .= (!empty($format) ? "format=$format&" : '')
              . (!empty($context) ? "context=$context&" : '')
@@ -367,7 +367,7 @@ class FedoraAPI {
    */
   public function getNextPID($numPIDS = 1, $namespace = '', $format = 'xml') {
     $fedora_url = $this->connection->requestURL(); 
-    $request = $fedora_url . "/objects/nextPID?";
+    $request = "$fedora_url/objects/nextPID?";
     $request .= (!empty($numPIDS) ? "numPIDS=$numPIDS&" : '')
              . (!empty($namespace) ? "namespace=$namespace&" : '')
              . (!empty($format) ? "format=$format" : '');
@@ -383,11 +383,19 @@ class FedoraAPI {
   public function getObjectXML($pid) {
     $pid = drupal_encode_path($pid);
     $fedora_url = $this->connection->requestURL(); 
-    $request = $fedora_url . "/objects/$pid/objectXML";
+    $request = "$fedora_url/objects/$pid/objectXML";
     $response = drupal_http_request($request);
     return $response;
   }
 
+  public function getRelationships($pid, $subject = NULL, $predicate = NULL, $format = 'rdf/xml' ) {
+    $pid = drupal_encode_path($pid);
+    $fedora_url = $this->connection->requestURL();
+    $request = "$fedora_url/objects/$pid/relationships";
+    $response = drupal_http_request($request);
+    return $response;
+  }
+  
   /**
    *
    * @param String $foxml_file
@@ -438,7 +446,7 @@ class FedoraAPI {
 
     $fedora_url = $this->connection->requestURL(); 
 
-    $request = $fedora_url . "/objects/$pid?";
+    $request = "$fedora_url/objects/$pid?";
 
     $request .= (!empty($label) ? "label=$label&" : '')
              . (!empty($format) ? "format=$format&" : '')
@@ -454,21 +462,10 @@ class FedoraAPI {
 
   /**
    * Due ot a bug in Fedora you need to specify the Mime Type for each call.
-   * @param <type> $pid
-   * @param <type> $dsID
-   * @param <type> $file_path
-   * @param <type> $dsLocation
-   * @param <type> $altIDs
-   * @param <type> $dsLabel
-   * @param <type> $versionable
-   * @param <type> $dsState
-   * @param <type> $formatURI
-   * @param <type> $checksumType
-   * @param <type> $checksum
-   * @param <type> $mimeType
-   * @param <type> $logMessage
-   * @param <type> $force
-   * @param <type> $ignoreContent
+   * @param string $pid
+   * @param string $dsID
+   * @param string $file_path
+   * @param array $params
    * @return StdClass HTTP response object
    * $response->data XML looks like this:
    * <?xml version="1.0" encoding="utf-16"?>
@@ -508,7 +505,7 @@ class FedoraAPI {
 
     $fedora_url = $this->connection->requestURL(); 
 
-    $request = $fedora_url . "/objects/$pid/datastreams/$dsID?";
+    $request = "$fedora_url/objects/$pid/datastreams/$dsID?";
     
     foreach ($params as $param_name => $param_value) {
       $request .= $param_value != NULL ? "$param_name=$param_value&" : '';
@@ -528,7 +525,7 @@ class FedoraAPI {
     $label = drupal_encode_path($label);
     $logMessage = drupal_encode_path($logMessage);
     $fedora_url = $this->connection->requestURL(); 
-    $request = $fedora_url . "/objects/$pid?";
+    $request = "$fedora_url/objects/$pid?";
     $request .= (!empty($label) ? "label=$label&" : '')
              . (!empty($ownerId) ? "ownerId=$ownerId&" : '')
              . (!empty($state) ? "state=$state" : '')
@@ -552,7 +549,7 @@ class FedoraAPI {
     $pid = drupal_encode_path($pid);
     $logMessage = drupal_encode_path($logMessage);
     $fedora_url = $this->connection->requestURL(); 
-    $request = $fedora_url . "/objects/$pid/datastreams/$dsID?";
+    $request = "$fedora_url/objects/$pid/datastreams/$dsID?";
     $request .= (!empty($startDT) ? "startDT=$startDT&" : '')
              . (!empty($endDT) ? "endDT=$endDT&" : '')
              . (!empty($logMessage) ? "logMessage=$logMessage" : '')
@@ -573,7 +570,7 @@ class FedoraAPI {
     $pid = drupal_encode_path($pid);
     $logMessage = drupal_encode_path($logMessage);
     $fedora_url = $this->connection->requestURL(); 
-    $request = $fedora_url . "/objects/$pid?";
+    $request = "$fedora_url/objects/$pid?";
     $request .= (!empty($logMessage) ? "logMessage=$logMessage" : '')
              . (!empty($force) ? "force=$force" : '');
     $response = drupal_http_request($request, array('headers' => array(), 'method' => 'DELETE'));

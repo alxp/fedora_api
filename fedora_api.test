@@ -53,6 +53,9 @@ class FedoraAPITestCase extends DrupalWebTestCase {
       $this->pass('Fedora API-A listMethods passed.');
     }
 
+    $resp_rel = $api->getRelationships('fedora-system:FedoraObject-3.0');
+    $this->assertEqual($resp_rel->code == 200, "Fedora API-A getRelationships", "FedoraAPI");    
+    
     $find_results = $api->findObjects("*islandora*", "" );
     if (empty($find_results->error)) {
       $this->pass('Fedora API-A findObjects passed.');
