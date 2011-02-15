@@ -395,6 +395,26 @@ class FedoraAPITestCase extends DrupalWebTestCase {
    
   }
 
+  public function testFedoraRelationships() {
+    global $base_url;
+    module_load_include('inc', 'fedora_api', 'fedora_api');
+    module_load_include('php', 'fedora_api', 'arc2/ARC2');
+    $client = new FedoraClient();
+    $api = new FedoraAPI();
+    
+    $item = $client->ingest();
+    $this->pidslist[] = $item->pid;
+    
+    $resp = $api->getRelationships($item->pid);
+    $parser = ARC2::getRDFXMLParser();
+    $parser->parse(NULL, $resp->data);
+    $triples = $parser->getTriples();
+    $this->assert(is_array($triples), "ARC2 RDFXML Parser returns array", "FedoraRelationships");
+    if (!empty($triples[0])) {
+      $this->assert(key_exists('o', $triples[0]) && key_exists('p', $triples[0]) && key_exists('s', $triples[0]), "Triple includes Subject, Predicate and Object keys.", "FedoraRelationships");
+    }
+  }
+  
   protected function drupalCreateFedoraUser($permissions = array('access comments', 'access content', 'post comments')) {
     // Create a role with the given permission set.
     if (!($rid = $this->drupalCreateRole($permissions))) {
