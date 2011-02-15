@@ -305,7 +305,7 @@ class FedoraAPITestCase extends DrupalWebTestCase {
     }
     try {
       $ds->content = $this->randomString(255);
-      $this->fail("Set XML datastream content to invalid XML raises exception.", "FedoraDatastream");
+        $this->fail("Set XML datastream content to invalid XML raises exception.", "FedoraDatastream");
     }
     catch (FedoraRestException $e) {
       $this->pass("Set XML datastream content to invalid XML raises exception.", "FedoraDatastream");
@@ -319,9 +319,7 @@ class FedoraAPITestCase extends DrupalWebTestCase {
       $this->pass("Create FedoraDatastream for non-existant datastream throws an exception.", 'FedoraDatastream');
     }
     
-    // Test datastream setters and getters.
-    
-    
+    // Test datastream setters and getters
     $ds->dsLabel = "Womp womp.";
     $ds->dsState = 'I';
     // Check against raw API call
@@ -332,6 +330,11 @@ class FedoraAPITestCase extends DrupalWebTestCase {
       $this->assertEqual((string) $ds_info_elem->dsLabel, "Womp womp.", 'Verify dsLabel setter', 'FedoraDatastream');
       $this->assertEqual((string) $ds_info_elem->dsState, 'I', "Verify dsState setter.", 'FedoraDatastream');
     }
+    // Test content getter and setter.
+    $ds_default_dc = $ds->content;
+    $ds_new_dc = file_get_contents(drupal_get_path('module', 'fedora_api') . '/test_data/test_dublin_core.xml');
+    $ds->content = $ds_new_dc;
+    $this->assertFalse($ds_default_dc == $ds->content, "Datastream content getter and setter.", 'FedoraDatastream');
   }
   
   public function testFedoraItem() {

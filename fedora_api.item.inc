@@ -22,7 +22,7 @@ class FedoraItem extends PropertyObject {
    * @return FedoraItem
    */
   function __construct($pid, $client = NULL) {
-    if ($this->client) {
+    if ($client) {
       $this->client = $client;
     }
     else {
