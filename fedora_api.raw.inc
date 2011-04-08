@@ -398,6 +398,36 @@ class FedoraAPI {
   
   /**
    *
+   * @param string $pid
+   * @param string $subject
+   * @param string $predicate
+   * @param string $object
+   * @param boolean $isLiteral
+   * @param string $datatype
+   * @return HTTP Response
+   */
+  public function addRelatinship($pid, $subject, $predicate, $object, $isLiteral = NULL, $datatype = NULL) {
+    $pid = drupal_encode_path($pid);
+    foreach (array($subject, $predicate, $object) as $uri) {
+      $uri = drupal_encode_path($uri);
+    }
+    $fedora_url = $this->connection->requestURL();
+    $request = "$fedora_url/objects/$pid/relationships/new?subject=$subject&predicate=$predicate&object=$object";
+    if ($isLiteral === False) {
+      $isLiteral = 'false';
+    }
+    if ($isLiteral === True) {
+      $isLiteral = 'true';
+    }
+    if ($isLiteral == 'true') {
+      $request .= "&isLiteral=$isLiteral&datatype=$datatype";
+    }
+    $response = drupal_http_request($request);
+    return $response;
+  }
+  
+  /**
+   *
    * @param String $foxml_file
    * @param String $foxml_string
    * @param String $pid
@@ -576,6 +606,10 @@ class FedoraAPI {
     $response = drupal_http_request($request, array('headers' => array(), 'method' => 'DELETE'));
     return $response;
   }
+  
+  static $relationships = array(
+    
+  );
 }
 
 /************************************************************************

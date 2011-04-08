@@ -10,6 +10,27 @@
  */
 
 /**
+ * Implementation of hook_entity_info().
+ * @return array 
+ */
+function fedora_api_entity_info() {
+  $return = array (
+    'fedora_api_connection' => array (
+      'label' => t('Fedora connection'),
+      'controller class' => 'FedoraAPIConnectionController',
+      'base table' => 'fedora_api_connection',
+      'entity keys' => array (
+        'id' => 'cid',
+        'label' => 'name',
+      ),
+      'fieldable' => TRUE,
+    ),
+  );
+  
+  return $return;
+}
+
+/**
  * @todo Please document this function.
  * @see http://drupal.org/node/1354
  */
@@ -51,7 +72,7 @@ function fedora_api_menu() {
 
 /**
  * Creates teh administration settings page to let the user specify the location
- * of the Feodra Repository server.
+ * of the Fedora Repository server.
  */
 function fedora_api_settings($form, &$form_state) {
   $form = array();
@@ -83,4 +104,44 @@ function fedora_api_settings($form, &$form_state) {
   //$form['#submit'][] = 'fedora_repository_admin_settings_submit';
   $form['#weight'] = 10;
   return system_settings_form($form);
+}
+
+function fedora_api_valid_pid($pid) {
+  $valid = FALSE;
+  if (strlen(trim($pid)) <= 64 && preg_match('/^([A-Za-z0-9]|-|\.)+:(([A-Za-z0-9])|-|\.|~|_|(%[0-9A-F]{2}))+$/', trim($pid))) {
+    $valid = TRUE;
+  }
+
+  return $valid;
+}
+
+/**
+ * Return an array of all fedora connection objects.
+ *
+ * @return
+ *   An array of all connection objects, indexed by cid.
+ */
+function fedora_api_get_connections() {
+  return fedora_api_connection_load_multiple(FALSE, array());
+}
+
+/**
+ * Load multiple fedora connections based on certain conditions.
+ *
+ * This function should be used whenever you need to load more than one
+ * connection from the database. Connections are loaded into memory and will not
+ * require database access if loaded again during the same page request.
+ *
+ * @see entity_load()
+ *
+ * @param $cids
+ *  An array of fedora connection IDs, or FALSE to load all connections.
+ * @param $conditions
+ *  An array of conditions to add to the query.
+ *
+ * @return
+ *  An array of connection objects, indexed by cid.
+ */
+function fedora_api_connection_load_multiple($cids = array(), $conditions = array()) {
+  return entity_load('fedora_api_connection', $cids, $conditions);
 }

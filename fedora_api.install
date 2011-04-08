@@ -1,0 +1,49 @@
+<?php
+
+function fedora_api_schema() {
+    $schema['fedora_api'] = array (
+      'description' => 'The list of fedora server connections.',
+      'fields' => array (
+        'cid' => array (
+          'description' => 'The primary identifier for the connection.',
+          'type' => 'serial',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+        ),
+        'auth_type' => array (
+          'description' => 'The authentication method for this connection',
+          'type' => 'varchar',
+          'length' => 32,
+          'not null' => TRUE,
+          'default' => 'basic',
+        ),
+        'title' => array (
+          'description' => 'The human-readable name for this repository connection.',
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+          'default' => '',
+        ),
+        'machine_name' => array (
+          'description' => 'The machine-readable name for this repository, used to form URL paths',
+          'type' => 'varchar',
+          'length' => 32,
+          'not null' => TRUE,
+          'default' => '',
+        ),
+        'url' => array (
+          'description' => 'The full URL ot access the Fedora Repository server, including scheme, host, port, and context.',
+          'type' => 'varchar',
+          'length' => 1024,
+          'not null' => TRUE,
+          'default' => 'http://localhost:8080/fedora',
+        ),
+
+
+      ),
+      'unique keys' => array (
+        'cid' => array('cid'),
+        'machine'
+      ),
+    );
+}

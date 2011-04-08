@@ -390,9 +390,7 @@ class FedoraAPITestCase extends DrupalWebTestCase {
     }
     catch (FedoraRestException $e) {
       $this->fail("Delete item $item->pid. " . $e->getMessage());
-    }
-    
-   
+    } 
   }
 
   public function testFedoraRelationships() {
@@ -409,7 +407,7 @@ class FedoraAPITestCase extends DrupalWebTestCase {
     $parser = ARC2::getRDFXMLParser();
     $parser->parse(NULL, $resp->data);
     $triples = $parser->getTriples();
-    $this->assert(is_array($triples), "ARC2 RDFXML Parser returns array", "FedoraRelationships");
+    $this->assert(is_array($triples) && count($triples) >= 1, "ARC2 RDFXML Parser returns array", "FedoraRelationships");
     if (!empty($triples[0])) {
       $this->assert(key_exists('o', $triples[0]) && key_exists('p', $triples[0]) && key_exists('s', $triples[0]), "Triple includes Subject, Predicate and Object keys.", "FedoraRelationships");
     }

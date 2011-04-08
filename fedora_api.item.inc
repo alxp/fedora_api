@@ -166,6 +166,12 @@ class FedoraItem extends PropertyObject {
     return $models;
   }
   
+  protected function get_relationships() {
+    include_once('arc2/ARC2.php');
+    $parser = ARC2::getParser();
+    $parser->parse();
+  }
+  
   private function _refreshDatastreams() {
     $this->_datastreams = NULL;
   }

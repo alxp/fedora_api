@@ -74,7 +74,6 @@ class FedoraDatastream extends PropertyObject {
   }
   
   protected function get_dsVersionID() {
-    
     return $this->_dsVersionID;
   }
   

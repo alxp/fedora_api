@@ -6,8 +6,12 @@ class FedoraConnection {
   public $url;
   public $username;
   public $password;
+  public $name;
+  public $machine_name;
+  public $description;
   
-  function __construct($url = NULL, $username = NULL, $password = NULL) {
+  function __construct($url = NULL, $username = NULL, $password = NULL, $name = NULL,
+          $machine_name = NULL, $description = NULL) {
     if (!empty($url)) {
       $this->url = $url;
     }
@@ -36,7 +40,9 @@ class FedoraConnection {
     }
     $this->username = $fedora_user;
     $this->password = $fedora_pass;
-    
+    $this->name = $name;
+    $this->machine_name = $machine_name;
+    $this->description = $description;
     
   }
   
