@@ -8,6 +8,9 @@ class FedoraConnection {
   public $password;
   
   function __construct($url = NULL, $username = NULL, $password = NULL) {
+    
+    global $user;
+    
     if (!empty($url)) {
       $this->url = $url;
     }

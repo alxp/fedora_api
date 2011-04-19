@@ -84,3 +84,18 @@ function fedora_api_settings($form, &$form_state) {
   $form['#weight'] = 10;
   return system_settings_form($form);
 }
+
+/**
+ * TRUE if the given string is of the correct format for a Fedora PID,
+ * e.g., namespace:identifier
+ * @param string $pid
+ * @return boolean 
+ */
+function fedora_api_valid_pid($pid) {
+  $valid = FALSE;
+  if (strlen(trim($pid)) <= 64 && preg_match('/^([A-Za-z0-9]|-|\.)+:(([A-Za-z0-9])|-|\.|~|_|(%[0-9A-F]{2}))+$/', trim($pid))) {
+    $valid = TRUE;
+  }
+
+  return $valid;
+}
